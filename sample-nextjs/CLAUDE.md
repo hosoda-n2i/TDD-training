@@ -1,6 +1,10 @@
 @AGENTS.md
 
-## TDD
+## TDD（仕様駆動）
 
-このプロジェクトは TDD で開発する。手順・規約・コマンドは `.claude/tdd/` を参照。
-新しい振る舞いの実装は `/tdd <作りたい振る舞い>` で Red→Green→Refactor を 1 サイクル回す。
+このプロジェクトは仕様駆動 TDD で開発する。新機能は `/spec` で仕様を起こし精査 → `/tdd` で実装する。
+規律・規約・コマンドは以下を参照（常時適用）:
+
+@.claude/tdd/rules/tdd-flow.md
+@.claude/tdd/rules/test-conventions.md
+@.claude/tdd/rules/spec-conventions.md

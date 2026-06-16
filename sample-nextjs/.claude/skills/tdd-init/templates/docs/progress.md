@@ -1,4 +1,4 @@
-# TDD 進捗ログ — sample-nextjs
+# TDD 進捗ログ — {{PROJECT_NAME}}
 
 > `/tdd` が 1 つの仕様（または受け入れ条件の論理単位）を終えるごとに、ここへ 1 エントリ追記する。
 > 「どの仕様を、どのテストで、どう実装/検証したか」の履歴。再生成では上書きしない。
@@ -15,9 +15,4 @@
 
 ## ログ
 
-### [2026-06-17] 金額整形表示ページ / .claude/tdd/specs/price-format.md
-- テスト:
-  - unit: `src/lib/formatPrice.test.ts`（7ケース: 正常3・小数2・負数1・MAX_SAFE_INTEGER1）
-  - E2E: `e2e/price.spec.ts`（1シナリオ: 1000入力→¥1,000表示）
-- 実装: `src/lib/formatPrice.ts`（Math.round + toLocaleString）、`src/app/price/page.tsx`（Client Component）
-- 結果: unit ✅ 7/7 / E2E ✅ 1/1 / 残課題: なし
+<!-- 新しいエントリを上から追記する -->
