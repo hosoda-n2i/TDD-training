@@ -74,6 +74,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを「仕
 
 **E2E（Playwright）は、Web アプリ（Next.js）かつユーザー操作フローを扱う場合に、導入してよいかを1度だけ確認**してから:
 - `npm create playwright@latest`（または pkg manager 相当）で導入。`e2e/` にシナリオを置く構成。
+- 導入後、`.gitignore` に Playwright の生成物を追加（無ければ）: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`。
 - Node ライブラリ等で E2E が不要なら導入しない（`test-strategy.md` に「E2E: 対象外」と明記）。
 
 > 導入はローカルのインストール。**push やリモート接続は伴わない**。Playwright のブラウザ DL は重いので確認を挟む。
