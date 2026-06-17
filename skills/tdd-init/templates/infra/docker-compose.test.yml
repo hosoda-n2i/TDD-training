@@ -1,0 +1,15 @@
+# テスト用 DB（統合/E2E 用）— {{PROJECT_NAME}}
+# /tdd-init が検出した DB に合わせて生成。ブランチ(worktree)ごとに DB 名・ポートを変える。
+# 理由: ブランチ間でマイグレーション状態が異なり、共有するとスキーマが壊れるため。
+# ローカル専用。本番/共有 DB には絶対に向けない。
+services:
+  db-test:
+    image: {{DB_IMAGE}} # 例: postgres:16
+    environment:
+      POSTGRES_DB: testdb_{{BRANCH_SLUG}} # 例: testdb_issue_296
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "{{TEST_DB_PORT}}:5432" # 例: 5433 など、他ブランチと衝突しない値
+    tmpfs:
+      - /var/lib/postgresql/data # 揮発化して起動を速く・クリーンに

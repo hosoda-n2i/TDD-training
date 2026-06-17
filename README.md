@@ -20,6 +20,8 @@
 - **技術スタックは固定**（TypeScript / Node.js、主に Next.js。unit=Vitest、E2E=Playwright）。ここは汎用化しない。
 - **ドメイン（プロジェクト個別性）だけを汎用化**。`tdd-init` はジェネレータのまま、出力物がドメイン特化になる。
 - **仕様駆動**: あなたは振る舞いやテストを考えない。**仕様を渡せば、テストを抽出して先に書き、それに準じて実装し、検証まで**回す。
+- **統合/E2E を後回しにしない**: `tdd-init` がテスト DB・認証・storageState・シードまで**実行基盤を立てて疎通確認**する。基盤が無いと unit に倒れるため、ここをセットアップでやり切る。
+- **レベルを強制**: 受け入れ条件ごとに unit/integration/E2E を必須付与。UI を伴うのに E2E 無し／層またぎなのに integration 無しは「未完了」。
 
 ## `/tdd` の8ステップ（仕様駆動フロー）
 
@@ -53,7 +55,13 @@ TDD-training/
             ├── docs/
             │   ├── commands.md       # → .claude/tdd/commands.md
             │   ├── test-strategy.md  # → .claude/tdd/test-strategy.md
+            │   ├── test-infra.md     # → .claude/tdd/test-infra.md（統合/E2E 実行基盤）
             │   └── progress.md       # → .claude/tdd/progress.md
+            ├── infra/                # 統合/E2E の実行基盤（検出した DB/認証に適応）
+            │   ├── docker-compose.test.yml   # ブランチ別テスト DB
+            │   ├── integration-setup.ts      # 実 DB 統合の globalSetup（migrate/clean）
+            │   ├── playwright.global-setup.ts # ログイン→storageState 保存
+            │   └── auth-test-helpers.ts       # requireAuth/requireRole モック
             └── spec-template.md      # → .claude/tdd/spec-template.md
 ```
 
@@ -68,9 +76,10 @@ TDD-training/
    ```
 
 2. **対象プロジェクトのルートで `/tdd-init` を実行する。**
-   - ドメイン・スタック（pkg manager / Next.js router / 既存 Vitest・Playwright）を検出。
-   - テスト基盤が無ければ導入（unit=Vitest は自動、E2E=Playwright は確認の上）。
-   - `.claude/skills/{spec,tdd}/` と `.claude/tdd/{rules,…}` を生成、`CLAUDE.md` に rules の `@import` を配線。
+   - ドメイン・スタック（pkg manager / Next.js router / 既存 Vitest・Playwright / **DB・認証**）を検出。
+   - テスト基盤が無ければ導入（unit=Vitest は自動、E2E=Playwright・テスト DB は確認の上）。
+   - **統合/E2E の実行基盤**（テスト DB の docker-compose・マイグレーション・認証ログイン→storageState・シード）を用意し、**各レベルが緑になる疎通確認**まで行う。
+   - `.claude/skills/{spec,tdd}/` と `.claude/tdd/{rules,docs,…}` を生成、`CLAUDE.md` に rules の `@import` を配線。
 
 3. **`/spec <作りたい機能のラフな説明>`** で仕様を起こし精査する → `.claude/tdd/specs/<slug>.md`。
 
