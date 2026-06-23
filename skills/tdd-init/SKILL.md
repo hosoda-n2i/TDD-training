@@ -1,150 +1,240 @@
 ---
 name: tdd-init
-description: TypeScript / Node.js（主に Next.js）プロジェクトを「仕様駆動 TDD」で開発できる状態にするブートストラップスキル。プロジェクトのドメインを読み取り、そのプロジェクト固有の rules と skills（/spec・/tdd）を .claude/ 配下に生成し、テスト基盤（Vitest / Playwright）に加えて統合/E2E を実際に走らせるための実行基盤（テスト用 DB・認証・シード）まで用意する。テストをまだ書いていないプロジェクトにも適用できる。「TDD をセットアップ」「tdd-init」「仕様駆動TDDの準備」等と言われたら使う。一度実行すれば以降は /spec と /tdd で開発する。
+description: TypeScript / Node.js（主に Next.js）プロジェクトを **dual-loop TDD**（外側 E2E ／ 内側 unit-integration）で開発できる状態にするブートストラップスキル。プロジェクトのドメインを読み取り、そのプロジェクト固有の slash commands（`/e2e` `/tdd` `/test` `/fix` `/review` `/db`）と subagents（`tdd-guide` `e2e-guide`）、auto-apply rules、テスト実行基盤（Vitest / Playwright / テスト DB / storageState）まで揃えた上で、CLAUDE.md をドメイン情報入りで書き起こす。テストをまだ書いていないプロジェクトにも適用できる。「TDD をセットアップ」「tdd-init」「dual-loop TDD の準備」等と言われたら使う。一度実行すれば以降は `/e2e` → `/tdd` で開発する。
 ---
 
-# tdd-init — 仕様駆動 TDD 環境のブートストラップ（ジェネレータ）
+# tdd-init — dual-loop TDD 環境のブートストラップ（ジェネレータ）
 
 このスキルは **ジェネレータ**。実行されたプロジェクトの **ドメイン** を読み取り、そのプロジェクト固有の
-**rules（常時効く規律）** と **skills（叩いて使う手順）** を生成する。スキル自身は汎用のまま、出力物がドメイン特化になる。
+**commands・agents・rules** を生成する。スキル自身は汎用のまま、出力物がドメイン特化になる。
+
+## 設計の核
+
+- **acceptance criteria は実行可能なテスト**（仕様書ではなく E2E / integration test）。仕様書 → テストへの翻訳ステップを取り除き、Claude が「仕様の言葉を取りこぼす」失敗を構造的に防ぐ。
+- **Dual-loop**: 外側（E2E）を先に書いて RED にし、内側（unit / integration）を 1 受け入れ条件 = 1 サイクルで緑にする。最後に外側の E2E が緑になる = 機能完成。
+- **専任 subagent**: `tdd-guide`（内側）と `e2e-guide`（外側）が役割ごとに別プロセスで動き、メインコンテキストを汚さない。
+- **SCAFFOLD ステップを必須化**: 型 / interface 定義 + スタブ（`throw new Error('Not implemented')`）を**テストより先に**書き、シグネチャを物理的に確定させる。
+- **規約に実コード例を埋め込む**: `rules/testing.md` に検出したスタック（{{DB}}・{{AUTH}}）の実コードを書き込む。Claude が真似るだけで規約を踏める。
+- **CLAUDE.md をドメインリファレンス化**: 用語表・実装済み機能・DB スキーマ・配置規則まで載せ、Claude が仕様の言葉とコードを直結できるようにする。
 
 ## 前提（技術スタックは固定。汎用化しない）
 
 - **TypeScript + Node.js**、主に **Next.js**。マルチ言語検出はしない。
-- **ユニット = Vitest（+ React Testing Library）**、**E2E = Playwright**。これらが無ければ導入する。
-- 「テストランナーが有るか」を見て終わりにしない。**無ければ立ち上げる**のがこのスキルの役割。
-- **最重要: 統合(integration)・E2E を“実際に走らせる”実行基盤（テスト用 DB・認証のテスト経路・シード・ログイン済み状態）まで用意する。** ここを後回しにすると、`/tdd` は統合/E2E を諦めて unit にしか倒れなくなる。基盤が無いことが「unit しか書かない」の根本原因なので、セットアップで**疎通確認まで**やり切る（「未実装・必要時に」で終わらせない）。
+- **Unit / Integration = Vitest（+ React Testing Library）**、**E2E = Playwright**。無ければ導入する。
+- **最重要: 統合(integration)・E2E を“実際に走らせる”実行基盤（テスト用 DB・認証のテスト経路・シード・ログイン済み状態）まで用意する。** ここを後回しにすると、Claude は統合 / E2E を諦めて unit にしか倒れなくなる。基盤が無いことが「unit しか書かない」の根本原因なので、セットアップで**疎通確認まで**やり切る。
 
-## 生成物（すべて対象プロジェクトの `.claude/` 配下）
+## 生成物
 
-### skills（`.claude/skills/`）
+### `.claude/commands/`（slash commands — dual-loop の入口）
 | パス | 役割 |
 |------|------|
-| `.claude/skills/spec/SKILL.md` | `/spec` … ラフな要望/チケットから**仕様書を起こし、精査**する |
-| `.claude/skills/tdd/SKILL.md` | `/tdd` … 精査済み仕様書から**8ステップの仕様駆動TDD**を駆動する |
+| `.claude/commands/e2e.md` | `/e2e` … 外側ループ。E2E spec を先に書く（RED）→ 必要な実装を列挙して inner loop の work item にする |
+| `.claude/commands/tdd.md` | `/tdd` … 内側ループ。SCAFFOLD → RED → GREEN → REFACTOR を `tdd-guide` agent に駆動させる |
+| `.claude/commands/test.md` | `/test` … unit / integration テスト実行＋解析 |
+| `.claude/commands/fix.md` | `/fix` … lint / format / typecheck の自動修正チェーン |
+| `.claude/commands/review.md` | `/review` … 10 観点（仕様充足 / 可読性 / ロジック / セキュリティ / パフォーマンス / エラー / テスト / API / DB / FE）のセルフレビュー |
+| `.claude/commands/db.md` | `/db` … DB 操作（{{DB}} がある場合のみ生成） |
 
-### rules（`.claude/tdd/rules/`、`CLAUDE.md` から `@import` で常時ロード）
+### `.claude/agents/`（subagents）
 | パス | 役割 |
 |------|------|
-| `.claude/tdd/rules/tdd-flow.md` | 仕様駆動TDDの規律（`/spec`→`/tdd`、テスト先行、緑を壊さない） |
-| `.claude/tdd/rules/test-conventions.md` | **ドメイン反映**のテスト規約（Next.js 前提。unit/E2E の配置・命名・モック方針） |
-| `.claude/tdd/rules/spec-conventions.md` | 仕様書のフォーマット（受け入れ条件の書き方） |
+| `.claude/agents/tdd-guide.md` | 内側ループ専任。`/tdd` から呼ばれて SCAFFOLD → RED → GREEN → REFACTOR を厳格に回す |
+| `.claude/agents/e2e-guide.md` | 外側ループ専任。`/e2e` から呼ばれて E2E spec を RED で書き、必要な実装を列挙する（E2E 対象プロジェクトのみ） |
 
-### docs（`.claude/tdd/`、skills が読む参照資料）
+### `.claude/rules/`（auto-apply rules）
 | パス | 役割 |
 |------|------|
-| `.claude/tdd/commands.md` | Vitest / Playwright / lint / typecheck の**実コマンド** |
-| `.claude/tdd/test-strategy.md` | unit / integration / E2E の使い分け（どの要件をどのレベルで） |
-| `.claude/tdd/test-infra.md` | **統合/E2E の実行基盤**（テスト DB・認証・シード・storageState）の構成と起動手順 |
-| `.claude/tdd/progress.md` | 仕様ごとの進捗ログ |
-| `.claude/tdd/specs/` | `/spec` が生成する仕様書の置き場（ディレクトリだけ作る） |
+| `.claude/rules/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`） |
+| `.claude/rules/testing.md` | テストの書き方・実コード例（unit / integration / E2E）。`*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` / `vitest.config.*` / `playwright.config.*` を編集中なら**自動添付** |
+| `.claude/rules/typescript.md` | TypeScript 規約。`*.ts` / `*.tsx` を編集中なら自動添付 |
 
-### 実行基盤（プロジェクトルート。DB/認証を検出したら用意）
+### `.claude/tdd/`（参照ドキュメント）
 | パス | 役割 |
 |------|------|
+| `.claude/tdd/test-strategy.md` | 受け入れ条件のレベル割当（unit / integration / E2E）の判断基準 |
+| `.claude/tdd/test-infra.md` | 統合 / E2E の実行基盤（テスト DB・認証・storageState・seed）の構成と起動手順 |
+| `.claude/tdd/commands.md` | 実コマンド（Vitest / Playwright / lint / typecheck / DB） |
+| `.claude/tdd/progress.md` | 機能ごとの進捗ログ（`/tdd` 完了時に追記） |
+
+### 実行基盤（プロジェクトルート。DB / 認証を検出したら用意）
+| パス | 役割 |
+|------|------|
+| `vitest.config.mts` / `vitest.setup.ts` | Vitest 設定（jsdom / `@/` エイリアス / setup） |
+| `playwright.config.ts` | Playwright 設定（storageState / webServer / テスト DB を読む `.env.test`） |
 | `docker-compose.test.yml` | ブランチ別のテスト用 DB（実 DB 統合・E2E 用） |
 | `.env.test`（example） | テスト DB 接続・認証バイパス等のテスト環境変数 |
 | 統合 globalSetup（Vitest） | テスト DB のマイグレーション適用 + データクリーン |
-| `e2e/global-setup.ts`（Playwright） | テストユーザーでログイン → `storageState` 保存（認証済み E2E のため） |
-| 認証テストヘルパー | `requireAuth`/`requireRole` 等のモック（unit/統合）・テストユーザーのシード |
+| `e2e/global-setup.ts`（Playwright） | テストユーザーでログイン → `storageState` 保存 |
+| 認証テストヘルパー | `requireAuth` / `requireRole` 等のモック（unit / integration）・テストユーザーのシード |
 
-> テンプレートはこの SKILL.md と同階層の `templates/` にある（`skills/`・`rules/`・`docs/`・`infra/`・`spec-template.md`）。
-> 生成時は **テンプレを読み、`{{...}}` を検出・ドメイン情報で置換** して書き出す。**実行基盤テンプレは検出した DB/認証に合わせて適応**させる（Prisma/Postgres・Firebase 等）。
+> テンプレートはこの SKILL.md と同階層の `templates/` にある（`commands/`・`agents/`・`rules/`・`docs/`・`infra/`）。
+> 生成時は **テンプレを読み、`{{...}}` を検出・ドメイン情報で置換** して書き出す。**実行基盤テンプレは検出した DB / 認証に合わせて適応**させる（Prisma / Drizzle / Postgres・Firebase / NextAuth 等）。
 
 ---
 
 ## 手順
 
 ### 0. 前提確認
-- 対象プロジェクトのルートを確認（`git rev-parse --show-toplevel`、無ければ `pwd`）。
-- 生成先は **対象プロジェクトの `.claude/`**。このスキル自身のディレクトリには書き込まない。
+- 対象プロジェクトのルートを確認（`git rev-parse --show-toplevel`、無ければ `pwd`）
+- 生成先は **対象プロジェクトの `.claude/`** および ルート。このスキル自身のディレクトリには書き込まない。
 
 ### 1. 既存の規約を最優先で読む
-- ルートの `CLAUDE.md` / `AGENTS.md` / `AGENT.md`（あれば全文。参照先も）、`.cursor/rules/**`, `.claude/rules/**`, `docs/**`。
-- 既存テストがあればそのディレクトリ（現状の書き方が答え）。明文化された規約は一般論より優先。
+- ルートの `CLAUDE.md` / `AGENTS.md` / `AGENT.md`（あれば全文。参照先も）、`.cursor/rules/**`、`.claude/rules/**`、`docs/**`
+- 既存テストがあればそのディレクトリ（現状の書き方が答え）
+- **明文化された規約は一般論より優先**
 
-### 2. ドメインを把握する（タイアリングの核）
+### 2. ドメインを把握する（テンプレ変数の核）
+
 このプロジェクトが**何をするアプリか**を読み取る。生成物にこのプロジェクト固有の語彙・配置を反映するため。
-- README / AGENTS / `package.json` の説明、主要ディレクトリ構成（`src/` 配下の `app`・`components`・`lib`・`services` 等の置き場）
-- ドメイン語彙（エンティティ名、主要なユースケース）
+
+- README / AGENTS / `package.json` の説明
+- 主要ディレクトリ構成（`src/` 配下の `app` / `components` / `lib` / `services` 等の置き場）
+- ドメイン語彙（エンティティ名 / 主要なユースケース / UI 言語）
 - 確定する値:
   - `{{PROJECT_NAME}}` … プロジェクト名
-  - `{{DOMAIN_SUMMARY}}` … このアプリの責務（1〜2行）
-  - `{{SRC_LAYOUT}}` … 実装/コンポーネント/サービスの配置（例: `src/app`, `src/components`, `src/lib`）
+  - `{{DOMAIN_SUMMARY}}` … このアプリの責務（1〜2 行）
+  - `{{SRC_LAYOUT}}` … 実装 / コンポーネント / サービスの配置（例: `src/app`, `src/components`, `src/lib`）
   - `{{NEXT_ROUTER}}` … App Router / Pages Router / （Next.js でなければ「Node ライブラリ」）
+  - `{{UI_LANGUAGE}}` … UI テキストの言語（日本語 / 英語 等）
+  - `{{LOG_LANGUAGE}}` … ログメッセージの言語
+  - `{{COMMIT_LANGUAGE}}` … コミットメッセージの言語
+  - 主要エンティティ・主要画面の一覧（CLAUDE.md の用語表 / 機能マトリクスに使う）
 
-### 3. スタック内の構成を検出する（TS/Node/Next.js 前提）
+### 3. スタック内の構成を検出する（TS / Node / Next.js 前提）
+
 - `{{PKG_MANAGER}}` … `npm` / `pnpm` / `yarn` / `bun`（lockfile で判定）
-- 既存の **Vitest** 設定（`vitest.config.*`, devDeps）、**Playwright** 設定（`playwright.config.*`）の有無
-- `{{LINT_CMD}}` / `{{TYPECHECK_CMD}}` / `{{BUILD_CMD}}` … `package.json` の scripts から実在分
-- **データ層**（統合/E2E の基盤判断に必須）:
-  - `{{DB}}` … Prisma（`prisma/schema.prisma`）/ Drizzle / その他 / 無し。DB 種別（Postgres など）、マイグレーションコマンド（`prisma migrate deploy` 等）、接続 env 名（`DATABASE_URL` 等）。
-  - `{{REPO_PATTERN}}` … データアクセスの形（例: repository 層をモックする規約か、実 DB か）。既存 rules / 既存テストから読む。
+- 既存の **Vitest** 設定（`vitest.config.*` / devDeps）、**Playwright** 設定（`playwright.config.*`）の有無
+- `{{LINT_CMD}}` / `{{LINT_FIX_CMD}}` / `{{FORMAT_CMD}}` / `{{TYPECHECK_CMD}}` / `{{BUILD_CMD}}` / `{{DEV_CMD}}` … `package.json` の scripts から実在分（無いものは「なし」と書く）
+- **データ層**（統合 / E2E の基盤判断に必須）:
+  - `{{DB}}` … Prisma（`prisma/schema.prisma`）/ Drizzle / その他 / 無し。DB 種別（Postgres など）、マイグレーションコマンド、接続 env 名（`DATABASE_URL` 等）
+  - `{{DB_GENERATE_CMD}}` / `{{DB_MIGRATE_CMD}}` / `{{DB_PUSH_CMD}}` / `{{DB_STUDIO_CMD}}` / `{{SEED_CMD}}` … 実在分
+  - `{{REPO_PATTERN}}` … データアクセスの形（repository 層をモックする規約か、実 DB か）。既存 rules / 既存テストから読む。
+  - `{{DB_TEST_UTILS_SNIPPET}}` … testing.md に埋め込む実コード例（DB / ORM に応じて Drizzle / Prisma のテスト接続スニペットを差し込む）
 - **認証**（E2E のログイン基盤に必須）:
-  - `{{AUTH}}` … Firebase / NextAuth / Clerk / 独自 / 無し。サーバ側のガード関数（`requireAuth` / `requireRole` 等）とセッションの持ち方（cookie 等）。
-- 上記が「無し」なら該当基盤はスキップしてよい（純ロジックの lib 等）。**あるのに飛ばすのは禁止**。
+  - `{{AUTH}}` … Firebase Auth / NextAuth / Clerk / 独自 / 無し。サーバ側のガード関数（`requireAuth` / `requireRole` 等）とセッションの持ち方
+  - `{{AUTH_MOCK_HELPER}}` / `{{AUTH_MOCK_SNIPPET}}` … testing.md に埋め込む実コード例
+  - `{{E2E_AUTH_FIXTURE}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` … e2e/fixtures/auth.ts の実コード例
+- **Playwright**:
+  - `{{TEST_E2E_ALL_CMD}}` / `{{TEST_E2E_FILE_CMD}}` / `{{TEST_E2E_GREP_CMD}}` / `{{TEST_E2E_UI_CMD}}`
+  - `{{PLAYWRIGHT_CONFIG_SNIPPET}}` … testing.md に埋め込む config 例
+  - `{{E2E_FEATURE_DIR}}` … e2e/ 配下の機能ディレクトリの命名（既存に準拠）
+
+上記が「無し」なら該当基盤はスキップしてよい（純ロジックの lib 等）。**あるのに飛ばすのは禁止**。
 
 ### 4. テスト基盤と「実行基盤」を用意する（無ければ導入し、疎通確認まで）
 
-`templates/infra/*` を、検出した DB/認証に合わせて適応させて書き出す。重い手順（Docker・ブラウザ DL・依存追加）に入る前に**まとめて1回だけ導入可否を確認**する。
+`templates/infra/*` を、検出した DB / 認証に合わせて適応させて書き出す。重い手順（Docker・ブラウザ DL・依存追加）に入る前に**まとめて 1 回だけ導入可否を確認**する。
 
 #### (a) ユニット（Vitest）— 常に整える
 - 既存があれば再利用、無ければ導入。devDeps: `vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @vitest/coverage-v8`
-- `vitest.config.mts`（jsdom 環境・`@/` エイリアス・setup ファイル）、`vitest.setup.ts`、`package.json` に `test` / `test:watch` / `coverage` / `typecheck` を追加。
+- `vitest.config.mts`（jsdom 環境・`@/` エイリアス・setup ファイル）、`vitest.setup.ts`、`package.json` に `test` / `test:watch` / `test:coverage` / `typecheck` を追加。
 
 #### (b) 統合(integration) の実行基盤
-- **サービス層の統合（境界をモック）**: 追加基盤は不要。`test-conventions.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
-- **実 DB を使う統合（repository 層など、`{{DB}}` がある場合）**: `templates/infra/docker-compose.test.yml` を**ブランチ別 DB 名/ポート**で生成し、`.env.test` と Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。「未実装・必要時に」で**終わらせない**。
+- **境界モック**: 追加基盤は不要。`rules/testing.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
+- **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を**ブランチ別 DB 名 / ポート**で生成し、`.env.test` と Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。「未実装・必要時に」で**終わらせない**。
 
-#### (c) E2E（Playwright）— Web アプリで、`{{DB}}`/`{{AUTH}}` も込みで“走る”状態にする
-- Playwright 未導入なら導入（`e2e/` 構成）。`.gitignore` に生成物を追加: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`。
-- **認証（`{{AUTH}}` がある場合）**: `templates/infra/playwright.global-setup.ts` を適応させ、**テストユーザーでログイン→`storageState` 保存**。`playwright.config` で `storageState` と `webServer`（テスト DB の `.env.test` を読んで dev/build 起動）を設定。
-- **DB（`{{DB}}` がある場合）**: `webServer` と globalSetup をテスト DB に向け、シードを投入。
-- 認証ガードの**モックヘルパー**（`requireAuth`/`requireRole` 等）を共有フィクスチャとして用意（unit/統合で使う）。
+#### (c) E2E（Playwright）— Web アプリで、`{{DB}}` / `{{AUTH}}` も込みで“走る”状態にする
+- Playwright 未導入なら導入（`e2e/` 構成）。`.gitignore` に生成物を追加: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`, `e2e/.auth/`
+- **認証**（`{{AUTH}}` がある場合）: `templates/infra/playwright.global-setup.ts` を適応させ、**テストユーザーでログイン → `storageState` 保存**。`playwright.config` で `storageState` と `webServer`（テスト DB の `.env.test` を読んで dev / build 起動）を設定。
+- **DB**（`{{DB}}` がある場合）: `webServer` と globalSetup をテスト DB に向け、シードを投入。
+- 認証ガードの**モックヘルパー**（`requireAuth` / `requireRole` 等）を共有フィクスチャとして用意（unit / integration で使う）。
 
 #### (d) 疎通確認（最重要・ここを省かない）
+
 セットアップの締めに、**各レベルが実際に緑になることを確認**する。確認用のスモークは確認後に削除:
-- unit: 簡単な 1 テスト。
-- 統合（実 DB を使う場合）: テスト DB に接続して 1 件 CRUD する最小テスト。
-- E2E: ログイン状態でトップ等を開く最小シナリオ 1 本（`storageState` が効くか）。
-- ここで通らなければ、`test-strategy.md` に「対象外」と書いて逃げず、**通るところまで直す**（または本当に対象外なら理由を明記）。
+- **unit**: 簡単な 1 テスト（例: `expect(1 + 1).toBe(2)`）
+- **integration（実 DB を使う場合）**: テスト DB に接続して 1 件 CRUD する最小テスト
+- **E2E**: ログイン状態でトップ等を開く最小シナリオ 1 本（`storageState` が効くか）
 
-> 導入はローカル操作。**push やリモート接続・本番/共有 DB への接続は伴わない**（テスト DB は Docker のローカル専用）。Docker・ブラウザ DL は重いので (a)〜(c) の導入可否は冒頭で1回確認する。
+ここで通らなければ、`test-strategy.md` に「対象外」と書いて逃げず、**通るところまで直す**（または本当に対象外なら理由を明記）。
 
-### 5. skills を生成する
-`templates/skills/spec.md` → `.claude/skills/spec/SKILL.md`、`templates/skills/tdd.md` → `.claude/skills/tdd/SKILL.md`。
-`{{...}}` を 2〜4 の結果で置換。ドメイン語彙・配置を本文に織り込む。
+> 導入はローカル操作。**push やリモート接続・本番 / 共有 DB への接続は伴わない**（テスト DB は Docker のローカル専用）。Docker・ブラウザ DL は重いので (a)〜(c) の導入可否は冒頭で 1 回確認する。
+
+### 5. commands / agents を生成する
+
+- `templates/commands/*` → `.claude/commands/*`
+- `templates/agents/*` → `.claude/agents/*`
+- `{{...}}` を 2〜4 の結果で置換
+- 「対象外」のものはスキップ:
+  - E2E 対象でない（純ライブラリ等）→ `e2e.md` / `e2e-guide.md` をスキップ
+  - DB が無い → `db.md` をスキップ
 
 ### 6. rules と docs を生成する
-- `templates/rules/*` → `.claude/tdd/rules/*`
-- `templates/docs/*` → `.claude/tdd/*`、`templates/spec-template.md` → `.claude/tdd/spec-template.md`、`.claude/tdd/specs/` を作成
-- `test-conventions.md` には検出した `{{SRC_LAYOUT}}` とドメインを反映（一般論で埋めない）。
-- `commands.md` は **実在するコマンドだけ**。無いものは「なし」と書く（捏造しない）。**統合（実 DB）・E2E を導入したら、その起動・テスト DB 立ち上げ・シードのコマンドも `commands.md` に必ず載せる**。
-- **`test-infra.md`** に、step4 で用意した実行基盤（テスト DB・認証・storageState・シード）の構成と起動手順を書く。`test-strategy.md` は **実際に用意した状態**に合わせて書き（「未実装・必要時に」で逃げない）、各受け入れ条件をどのレベルに割り当てるかの基準を明示する。
 
-### 7. CLAUDE.md を配線する
-対象プロジェクトのルート `CLAUDE.md`（無ければ最小作成）に、rules の `@import` と短い TDD セクションを追記する（既にあれば重複させない）:
+- `templates/rules/*` → `.claude/rules/*`
+- `templates/docs/*` → `.claude/tdd/*`
+- **`rules/testing.md` は実コードスニペットを埋め込む**: 検出した DB / 認証に応じて `{{DB_TEST_UTILS_SNIPPET}}` / `{{AUTH_MOCK_SNIPPET}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` / `{{PLAYWRIGHT_CONFIG_SNIPPET}}` をテンプレ実コードに展開する。Claude が真似るだけで規約を踏める形にする。
+- `commands.md` は **実在するコマンドだけ**。無いものは「なし」と書く（捏造しない）。**統合（実 DB）・E2E を導入したら、その起動・テスト DB 立ち上げ・シードのコマンドも必ず載せる**。
+- **`test-infra.md`** に、step 4 で用意した実行基盤（テスト DB・認証・storageState・seed）の構成と起動手順を書く。`test-strategy.md` は **実際に用意した状態**に合わせて書く（「未実装・必要時に」で逃げない）。
+
+### 7. CLAUDE.md をドメインリファレンス化する
+
+対象プロジェクトのルート `CLAUDE.md`（無ければ最小作成）を**ドメイン情報入りで書き起こす**。**`@import` 行を足すだけで終えない**。
+
+CLAUDE.md に含めるセクション（既存にあれば尊重し、無ければ追記）:
 
 ```markdown
-## TDD（仕様駆動）
+# {{PROJECT_NAME}}
 
-このプロジェクトは仕様駆動 TDD で開発する。新機能は `/spec` で仕様を起こし精査 → `/tdd` で実装する。
-規律・規約・コマンドは以下を参照（常時適用）:
+{{DOMAIN_SUMMARY}}
 
-@.claude/tdd/rules/tdd-flow.md
-@.claude/tdd/rules/test-conventions.md
-@.claude/tdd/rules/spec-conventions.md
+## Terminology
+
+| コード内 | UI 表示 | 説明 |
+|---------|--------|------|
+| <entity> | <表示名> | <役割> |
+...
+
+## Tech Stack
+
+- Runtime / フレームワーク / DB / Auth / Test ...
+
+## Implemented Features
+
+| 機能 | 状態 | 概要 |
+|------|------|------|
+...
+
+## DB Schema Overview
+
+<ER 図 or キーテーブル一覧>
+
+## Commands
+
+(./.claude/tdd/commands.md と同期させた最小サマリ)
+
+## Project Structure
+
+{{SRC_LAYOUT}} の配置規則 / colocation 規約
+
+## Development Workflow
+
+dual-loop TDD（外側 E2E / 内側 unit-integration）で開発する:
+1. `/e2e <機能名>` で外側ループの E2E spec を書く（RED）
+2. `/tdd <e2e spec パス>` で内側ループを回す（SCAFFOLD → RED → GREEN → REFACTOR）
+3. 全受け入れ条件が緑 → 外側 E2E が緑 → 機能完成
+
+詳細な規律・規約は以下を参照（常時適用）:
+
+@.claude/rules/tdd-flow.md
 ```
 
+- 用語表・実装済み機能マトリクス・DB スキーマ概要は、ドメイン把握（step 2）で得た情報を**省略せず**書き出す。Claude が仕様の言葉とコードを直結できるかはここに掛かっている。
+- `testing.md` / `typescript.md` は `paths:` ベースで auto-apply されるので CLAUDE.md からの `@import` は不要。`tdd-flow.md` のみ常時 `@import`。
+
 ### 8. 報告する
-生成/更新したファイルと、導入したテスト基盤、次の一歩を簡潔に伝える:
-> セットアップ完了。`/spec <作りたい機能のラフな説明>` で仕様を起こすところから始められます。
+
+生成 / 更新したファイルと、導入したテスト基盤、次の一歩を簡潔に伝える:
+
+> セットアップ完了。`/e2e <作りたい機能のラフな説明>` で外側ループの E2E spec を書くところから始められます。UI を伴わない機能なら `/tdd <機能説明>` で直接 inner loop に入れます。
 
 ---
 
 ## 設計上の約束
-- **スタックは TS/Node/Next.js 固定**。ドメイン（プロジェクト個別性）だけを汎用パラメータとして扱う。
+
+- **スタックは TS / Node / Next.js 固定**。ドメイン（プロジェクト個別性）だけを汎用パラメータとして扱う。
 - **検出 > 一般論**。既存テスト・既存規約・実コマンドが常に優先。
-- **コマンドは実在分だけ**。無いものは「なし」。
-- **このスキルはセットアップ専用**。日々は `/spec` と `/tdd` が回す。再セットアップ時だけ `tdd-init` を再実行。
-- **生成先は対象プロジェクトの `.claude/` のみ**。このスキルのディレクトリは読み取り専用。
+- **コマンドは実在分だけ**。無いものは「なし」。捏造しない。
+- **このスキルはセットアップ専用**。日々の開発は `/e2e` と `/tdd` が回す。再セットアップ時だけ `tdd-init` を再実行。
+- **生成先は対象プロジェクトの `.claude/` と ルート**。このスキルのディレクトリは読み取り専用。
+- **インフラ・配布の仕組み（install.sh / グローバル登録 / CI 設定）を勝手に作らない**。スキルはセットアップだけに留める。

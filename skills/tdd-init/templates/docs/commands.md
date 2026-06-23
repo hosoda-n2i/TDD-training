@@ -38,7 +38,8 @@
 | dev 起動（動作確認用） | `{{DEV_CMD}}` |
 
 ## 使い分け
-- **TDD サイクル中（Red/Green）**: まず**ファイル単位 / 名前単位**で速く回す。
-- **回帰確認（フロー step5/6）**: 全ユニット → 対象 E2E の順で通す。
+- **Inner loop の RED / GREEN 中**: まず**ファイル単位 / 名前単位**で速く回す（`{{TEST_UNIT_FILE_CMD}}`）。
+- **Inner loop の REFACTOR 中**: 1 変更ごとにファイル単位で走らせて緑を維持する。
+- **Outer loop（E2E）の確認**: 対象 E2E を `{{TEST_E2E_FILE_CMD}}` で実行。緑になれば機能完成。
 - **コミット前**: 存在するものを順に通す — `{{TEST_UNIT_ALL_CMD}}` → `{{TYPECHECK_CMD}}` → `{{LINT_CMD}}`。
 - いずれかが落ちている状態でコミットしない。
