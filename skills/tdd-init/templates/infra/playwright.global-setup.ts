@@ -9,10 +9,21 @@
  *  - テスト用バイパス: .env.test のフラグでテスト用セッション cookie を発行する経路を用意し、それを叩く
  * テストユーザーはテスト DB にシードしておく（test-infra.md 参照）。
  *
+ * env 契約（direnv 親子継承を前提に、親 .envrc で以下を export しておく）:
+ *   - E2E_BASE_URL       … 例: http://localhost:3000
+ *   - E2E_TEST_EMAIL     … テストユーザーのメール（DB に seed 済みであること）
+ *   - E2E_TEST_PASSWORD  … テストユーザーのパスワード
+ *   - TEST_DATABASE_URL  … webServer が dev/build 起動時に DATABASE_URL として渡す
+ *
  * playwright.config.ts 側:
  *   use: { storageState: 'e2e/.auth/state.json', baseURL: process.env.E2E_BASE_URL },
  *   globalSetup: './e2e/global-setup.ts',
- *   webServer: { command: '<.env.test を読んでアプリ起動>', url: process.env.E2E_BASE_URL, reuseExistingServer: !process.env.CI },
+ *   webServer: {
+ *     command: '<アプリ起動コマンド>',
+ *     url: process.env.E2E_BASE_URL,
+ *     env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? '' },
+ *     reuseExistingServer: !process.env.CI,
+ *   },
  */
 import { chromium, type FullConfig } from "@playwright/test";
 

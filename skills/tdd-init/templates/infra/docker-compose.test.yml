@@ -1,15 +1,23 @@
-# テスト用 DB（統合/E2E 用）— {{PROJECT_NAME}}
-# /tdd-init が検出した DB に合わせて生成。ブランチ(worktree)ごとに DB 名・ポートを変える。
-# 理由: ブランチ間でマイグレーション状態が異なり、共有するとスキーマが壊れるため。
-# ローカル専用。本番/共有 DB には絶対に向けない。
+# テスト用 DB（統合 / E2E 用）— {{PROJECT_NAME}}
+#
+# /tdd-init が検出した DB に合わせて生成。
+#
+# direnv 親子継承運用を前提に、ポートと DB 名は **環境変数で受ける**:
+#   - $TEST_DB_PORT  … ホスト側ポート（worktree 並列起動時に親 .envrc から子で上書き）
+#   - $TEST_DB_NAME  … テスト DB 名（親 .envrc で `testdb_${PWD##*/}` 等で自動命名）
+#
+# 並列 worktree でポートが衝突するときは worktree 直下の .envrc で
+# `export TEST_DB_PORT=5434` のように上書きする（詳細は .claude/tdd/test-infra.md）。
+#
+# ローカル専用。本番 / 共有 DB には絶対に向けない。
 services:
   db-test:
     image: {{DB_IMAGE}} # 例: postgres:16
     environment:
-      POSTGRES_DB: testdb_{{BRANCH_SLUG}} # 例: testdb_issue_296
+      POSTGRES_DB: ${TEST_DB_NAME:?TEST_DB_NAME を設定してください（親 .envrc or .env.test）}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "{{TEST_DB_PORT}}:5432" # 例: 5433 など、他ブランチと衝突しない値
+      - "${TEST_DB_PORT:?TEST_DB_PORT を設定してください（親 .envrc or .env.test）}:5432"
     tmpfs:
       - /var/lib/postgresql/data # 揮発化して起動を速く・クリーンに

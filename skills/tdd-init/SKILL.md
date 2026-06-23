@@ -131,13 +131,35 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 #### (b) 統合(integration) の実行基盤
 - **境界モック**: 追加基盤は不要。`rules/testing.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
-- **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を**ブランチ別 DB 名 / ポート**で生成し、`.env.test` と Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。「未実装・必要時に」で**終わらせない**。
+- **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を生成し、Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。**ポート・DB 名は env 変数（`$TEST_DB_PORT` / `$TEST_DB_NAME`）で実行時に解決**するテンプレを使う。「未実装・必要時に」で**終わらせない**。
 
 #### (c) E2E（Playwright）— Web アプリで、`{{DB}}` / `{{AUTH}}` も込みで“走る”状態にする
 - Playwright 未導入なら導入（`e2e/` 構成）。`.gitignore` に生成物を追加: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`, `e2e/.auth/`
-- **認証**（`{{AUTH}}` がある場合）: `templates/infra/playwright.global-setup.ts` を適応させ、**テストユーザーでログイン → `storageState` 保存**。`playwright.config` で `storageState` と `webServer`（テスト DB の `.env.test` を読んで dev / build 起動）を設定。
+- **認証**（`{{AUTH}}` がある場合）: `templates/infra/playwright.global-setup.ts` を適応させ、**テストユーザーでログイン → `storageState` 保存**。`playwright.config` で `storageState` と `webServer`（`process.env.TEST_DATABASE_URL` を `DATABASE_URL` として渡して dev / build 起動）を設定。
 - **DB**（`{{DB}}` がある場合）: `webServer` と globalSetup をテスト DB に向け、シードを投入。
 - 認証ガードの**モックヘルパー**（`requireAuth` / `requireRole` 等）を共有フィクスチャとして用意（unit / integration で使う）。
+
+#### (d-env) 環境変数の契約と direnv 運用
+
+テスト DB / E2E は以下の env 変数で動く前提でテンプレを生成する。**`/tdd-init` はこれらを env で受けるテンプレを書き出すだけで、値そのものを生成物に焼かない**（ハードコードしない）:
+
+| 変数 | 役割 |
+|------|------|
+| `TEST_DB_PORT` | テスト DB のホスト側ポート（worktree 並列起動で衝突回避） |
+| `TEST_DB_NAME` | テスト DB 名（worktree ごとに別名。例: `testdb_${PWD##*/}`） |
+| `TEST_DATABASE_URL` | テスト DB 接続 URL の一次ソース |
+| `DATABASE_URL` | アプリが見る URL。E2E 中は `=$TEST_DATABASE_URL` で上書き運用 |
+| `E2E_BASE_URL` | E2E が叩く URL |
+| `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` | E2E のログインユーザー |
+
+**direnv 親子継承運用が検出できる場合**（プロジェクトの親ディレクトリに `.envrc` がある、または既存 `.envrc` で `source_env ..` を使っている等）:
+
+- 既定値の置き場は**親 `.envrc`**。`/tdd-init` は**親 .envrc を書き換えない**（環境はユーザー所有）。
+- worktree 直下の `.envrc` も `/tdd-init` は**生成しない**（direnv が CWD から最も近い `.envrc` を読むため、親に 1 つあれば自動継承される。並列 worktree のポート衝突時のみユーザーが手動で作る）。
+- 代わりに `.env.test.example` を**プロジェクト直下に生成**し、必要な env 変数の一覧とサンプル値を載せる（ユーザーが親 .envrc に転記して使う）。
+- `test-infra.md` の「環境変数の契約」セクションで親 / 子 .envrc の例と注意点を明示する。
+
+**direnv 親子継承運用ではない場合**: `.env.test` を生成して dotenv 経由で読ませる。env 変数の契約自体は同じ。
 
 #### (d) 疎通確認（最重要・ここを省かない）
 
