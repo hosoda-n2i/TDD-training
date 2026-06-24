@@ -12,7 +12,6 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 - 実装/コンポーネント/サービスの配置: {{SRC_LAYOUT}}
 - 単体テスト: Vitest（`{{TEST_UNIT_FILE_CMD}}` / `{{TEST_UNIT_ALL_CMD}}`）
 - mutation: Stryker（`{{MUTATION_CMD}}`）
-- 現在の git: !`git status --short 2>&1`
 
 ## Your task
 

@@ -273,6 +273,7 @@ dual-loop TDD（外側 E2E / 内側 unit-integration）で開発する:
 @.claude/rules/tdd-flow.md
 ```
 
+- **VDD ツール（step 4 (a-vdd)）を導入しなかった場合は、上記 step 4 から `/harden` を除く**（`harden.md` を生成していないため）。`/adversary` は常に生成するので残してよい。
 - 用語表・実装済み機能マトリクス・DB スキーマ概要は、ドメイン把握（step 2）で得た情報を**省略せず**書き出す。Claude が仕様の言葉とコードを直結できるかはここに掛かっている。
 - `testing.md` / `typescript.md` は `paths:` ベースで auto-apply されるので CLAUDE.md からの `@import` は不要。`tdd-flow.md` のみ常時 `@import`。
 
