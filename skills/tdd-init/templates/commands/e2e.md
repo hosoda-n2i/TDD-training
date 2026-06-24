@@ -55,6 +55,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 ## Rules
 
 - E2E は **acceptance criteria の物理的な実体**。仕様の言葉で test 名を書く。
+- 引数に `.claude/tdd/specs/*.md`（EARS 仕様）パスが渡された／対応する spec が存在する場合は、それを**構造化された受け入れ条件の参照**として読み込み、REQ の言葉で E2E のシナリオ名を書く。ただし **spec はゲートではなく、テストが acceptance の実体**。spec が無くても機能説明から E2E を書ける。
 - UI/画面のないバックエンド機能は E2E の対象外。**integration test を acceptance に**して `/tdd` に直接入る。
 - 認証・テストデータの扱いは `.claude/rules/testing.md` に従う。
 - 1機能あたり主要フロー 1〜数本に絞る。境界・異常系は inner loop（unit/integration）に寄せる。
