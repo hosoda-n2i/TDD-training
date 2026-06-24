@@ -51,7 +51,7 @@ flowchart TD
     subgraph dev["機能開発（機能ごとに繰り返す）"]
       direction TB
       e2e["/e2e → e2e-guide (sonnet)<br/>外側RED: E2E spec を先に書く ＋ 実装を列挙<br/>rule: tdd-flow ＋ testing"]
-      tdd["/tdd → tdd-guide (sonnet)<br/>SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR<br/>rule: tdd-flow ＋ testing ＋ typescript<br/>随時: /test ・ /fix ・ /db"]
+      tdd["/tdd → tdd-guide (sonnet)<br/>SCAFFOLD → RED → SPEC-CHECK→spec-check(sonnet) → GREEN → REFACTOR<br/>rule: tdd-flow ＋ testing ＋ typescript<br/>随時: /test ・ /fix ・ /db"]
       dod{"全受け入れ条件が緑<br/>＝ 外側 E2E が緑（DoD）"}
       e2e --> tdd
       tdd -->|受け入れ条件ごと| tdd
