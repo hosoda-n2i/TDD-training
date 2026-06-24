@@ -29,6 +29,7 @@ paths:
   - 層またぎ / DB / 外部 I/O → **integration**
   - 画面をまたぐユーザー操作フロー → **E2E**
 - 詳細な判断基準は `.claude/tdd/test-strategy.md` に従う。
+- **テストは検証する REQ をタグ付けする**: テスト名先頭か `// @covers REQ-003` をテスト内に記述。影響範囲の grep と spec-check の結合キーになる。spec を使わない場合はタグ不要。
 
 ## 守ること
 
