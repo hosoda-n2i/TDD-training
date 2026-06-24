@@ -82,7 +82,8 @@ TDD-training/
             ├── rules/               # → <project>/.claude/rules/*
             │   ├── tdd-flow.md      #   dual-loop の規律（常時適用）
             │   ├── testing.md       #   テストの書き方・実コード例（property/mutation 含む）
-            │   └── typescript.md    #   TypeScript 規約
+            │   ├── typescript.md    #   TypeScript 規約
+            │   └── spec-conventions.md  #   EARS 仕様の規約（`.claude/tdd/specs/**` 編集中に自動添付）
             ├── docs/                # → <project>/.claude/tdd/*
             │   ├── commands.md      #   実コマンド一覧
             │   ├── test-strategy.md #   レベル割当 + property/mutation の適用判断

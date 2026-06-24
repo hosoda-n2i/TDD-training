@@ -5,6 +5,8 @@
 >
 > **この仕様はゲートではなく任意入力。** 受け入れの実体は E2E / integration テスト。
 > spec とテストがずれたら**テストを正**とし、spec を直す。spec が無くても `/e2e` → `/tdd` で開発できる。
+>
+> **住み分け**: 本ファイルは文書の雛形（表・セクション構成）。EARS パターン・REQ-ID 規約・異常系ルール等の**規約は `.claude/rules/spec-conventions.md`** を参照。
 
 ---
 
@@ -36,13 +38,7 @@
 | REQ-004 | Unwanted | IF <異常条件> THEN THE SYSTEM SHALL <応答> | integration |
 | REQ-005 | Optional | WHERE <機能が含まれる> THE SYSTEM SHALL <応答> | unit |
 
-EARS パターンの早見:
-
-- **Ubiquitous（常時）**: `THE SYSTEM SHALL ...`
-- **Event-driven（イベント）**: `WHEN <trigger> THE SYSTEM SHALL <response>`
-- **State-driven（状態）**: `WHILE <state> THE SYSTEM SHALL <response>`
-- **Unwanted（異常系）**: `IF <condition> THEN THE SYSTEM SHALL <response>`
-- **Optional（任意機能）**: `WHERE <feature included> THE SYSTEM SHALL <response>`
+EARS パターンの詳細は `.claude/rules/spec-conventions.md` を参照。
 
 > **異常系（IF ... THEN）を必ず 1 つ以上含める。** happy path だけの仕様にしない。
 > 推奨レベルの判断は `.claude/tdd/test-strategy.md` に従う（入出力で閉じる→unit / 層またぎ→integration / 画面操作フロー→E2E）。

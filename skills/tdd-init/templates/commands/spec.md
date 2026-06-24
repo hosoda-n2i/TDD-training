@@ -19,6 +19,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 ### Step 1: 既存を読む
 
+- `.claude/rules/spec-conventions.md`（EARS の規約。REQ-ID・異常系・スコープ外等の規律はここに集約）
 - `.claude/tdd/spec-template.md`（出力フォーマットの雛形）
 - 関連する既存 spec（`.claude/tdd/specs/*.md`）・既存実装・CLAUDE.md の用語表（ドメイン語彙を仕様に揃える）
 

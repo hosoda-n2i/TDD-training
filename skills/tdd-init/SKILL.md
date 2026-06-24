@@ -52,6 +52,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 | `.claude/rules/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`） |
 | `.claude/rules/testing.md` | テストの書き方・実コード例（unit / integration / E2E）。`*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` / `vitest.config.*` / `playwright.config.*` を編集中なら**自動添付** |
 | `.claude/rules/typescript.md` | TypeScript 規約。`*.ts` / `*.tsx` を編集中なら自動添付 |
+| `.claude/rules/spec-conventions.md` | EARS 仕様の規約（パターン早見・REQ-ID・異常系必須・スコープ外明記）。`.claude/tdd/specs/**` を編集中なら**自動添付** |
 
 ### `.claude/tdd/`（参照ドキュメント）
 | パス | 役割 |
@@ -215,6 +216,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 - `templates/rules/*` → `.claude/rules/*`
 - `templates/docs/*` → `.claude/tdd/*`（`spec-template.md` を含む。`/spec` の出力先 `.claude/tdd/specs/` も用意する＝空ディレクトリ or `.gitkeep`）
+- `testing.md` は `*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` 編集中に自動添付、`spec-conventions.md` は `.claude/tdd/specs/**` 編集中に自動添付（`paths:` ベースの auto-apply）。
 - **`rules/testing.md` は実コードスニペットを埋め込む**: 検出した DB / 認証に応じて `{{DB_TEST_UTILS_SNIPPET}}` / `{{AUTH_MOCK_SNIPPET}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` / `{{PLAYWRIGHT_CONFIG_SNIPPET}}` をテンプレ実コードに展開する。Claude が真似るだけで規約を踏める形にする。property-based / mutation の節は汎用の実コード例（`fast-check`）が既に入っているのでそのまま使う。
 - `commands.md` は **実在するコマンドだけ**。無いものは「なし」と書く（捏造しない）。**統合（実 DB）・E2E を導入したら、その起動・テスト DB 立ち上げ・シードのコマンドも必ず載せる**。VDD を導入したら `{{MUTATION_CMD}}` を載せ、未導入なら mutation 行は「なし」にする。
 - **`test-infra.md`** に、step 4 で用意した実行基盤（テスト DB・認証・storageState・seed）の構成と起動手順を書く。`test-strategy.md` は **実際に用意した状態**に合わせて書く（「未実装・必要時に」で逃げない）。
