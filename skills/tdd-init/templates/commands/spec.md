@@ -4,7 +4,7 @@ argument-hint: <作りたい機能のラフな説明>
 allowed-tools: Read, Write, Edit, Grep, Glob
 ---
 
-> **位置づけ**: spec は**任意入力**であって**ゲートではない**。acceptance の実体は引き続き **E2E / integration テスト**で、spec はその上位権威ではない。spec が無くても `/e2e` → `/tdd` で開発できる。spec は「何を作るか」を REQ 単位で言語化し、`/e2e`・`/tdd` に渡せる構造化された受け入れ条件の**参照**を作るためのもの。
+> **位置づけ**: spec は**任意入力**であって**ゲートではない**。acceptance の実体は E2E / integration テスト。spec が無くても `/e2e` → `/tdd` で開発できる。spec は受け入れ条件を REQ 単位で言語化し、`/e2e`・`/tdd` に渡せる構造化された参照を作るためのもの。
 
 ## Context — {{PROJECT_NAME}}
 
@@ -15,30 +15,17 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 ## Your task
 
-`$ARGUMENTS`（作りたい機能のラフな説明）を、EARS 形式の構造化仕様に起こす。
+`$ARGUMENTS`（作りたい機能のラフな説明）を EARS 形式の構造化仕様に起こす。
 
 ### Step 1: 既存を読む
 
-- `.claude/rules/spec-conventions.md`（EARS の規約。REQ-ID・異常系・スコープ外等の規律はここに集約）
-- `.claude/tdd/spec-template.md`（出力フォーマットの雛形）
-- 関連する既存 spec（`.claude/tdd/specs/*.md`）・既存実装・CLAUDE.md の用語表（ドメイン語彙を仕様に揃える）
+- `@.claude/rules/spec-conventions.md` — EARS パターン・REQ-ID 規約・守ること
+- `.claude/tdd/spec-template.md` — 出力フォーマット
+- 関連する既存 spec（`.claude/tdd/specs/*.md`）・既存実装・CLAUDE.md の用語表
 
 ### Step 2: EARS 形式で受け入れ条件を書く
 
-各要件を、振る舞いに合った EARS パターンで書く:
-
-| パターン | 形 | 使いどころ |
-|----------|----|-----------|
-| Ubiquitous（常時） | `THE SYSTEM SHALL <応答>` | 常に成り立つ性質 |
-| Event-driven（イベント） | `WHEN <トリガー> THE SYSTEM SHALL <応答>` | 何かが起きたとき |
-| State-driven（状態） | `WHILE <状態> THE SYSTEM SHALL <応答>` | ある状態の間 |
-| Unwanted（異常系） | `IF <条件> THEN THE SYSTEM SHALL <応答>` | エラー / 不正入力 |
-| Optional（任意機能） | `WHERE <機能が含まれる> THE SYSTEM SHALL <応答>` | 構成で有無が変わる機能 |
-
-- 各要件に **`REQ-001` 形式の ID** を振る。
-- 各 REQ に**推奨テストレベル**（unit / integration / E2E）を付ける（`.claude/tdd/test-strategy.md` の判断基準に従う）。
-- **異常系（IF ... THEN）を必ず含める。** happy path だけの仕様にしない。
-- スコープ外（やらないこと）を明記する。
+`@.claude/rules/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って各要件を書く（パターン選択・REQ-ID・推奨テストレベル付与・異常系必須・スコープ外明記）。
 
 ### Step 3: 出力する
 
@@ -48,13 +35,12 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 書き出した spec パスを示し、次を案内する:
 
-- UI を伴う機能: `/e2e .claude/tdd/specs/<slug>.md` で外側ループの E2E spec を書く（spec を受け入れ条件の参照として読む）。
-- UI を伴わない機能: `/tdd .claude/tdd/specs/<slug>.md` で内側ループに直接入る。
+- UI を伴う機能: `/e2e .claude/tdd/specs/<slug>.md`
+- UI を伴わない機能: `/tdd .claude/tdd/specs/<slug>.md`
 
 ## Rules
 
-- **spec はテストの上位権威ではない。** 受け入れの実体は E2E / integration テスト。spec と実テストがずれたら、**テストを正**として spec を直す（spec に合わせてテストを歪めない）。
-- spec は思考とコミュニケーションの補助。**ゲートにしない**（spec が無いことを理由に `/e2e`・`/tdd` を止めない）。
-- ドメイン語彙は CLAUDE.md の用語表に揃える。仕様の言葉とコードの言葉を一致させる。
-- 推測で要件を盛らない。ラフな説明から確実に言えることを REQ にし、曖昧な点は「未確定」として残し、決め切らずに `/e2e`・`/tdd` での具体化に委ねてよい。
+- **spec はテストの上位権威ではない。** spec と実テストがずれたら**テストを正**として spec を直す。
+- ドメイン語彙は CLAUDE.md の用語表に揃える。
+- 推測で要件を盛らない。曖昧な点は「未確定」として残し、`/e2e`・`/tdd` での具体化に委ねる。
 - UI テキストは {{UI_LANGUAGE}}。
