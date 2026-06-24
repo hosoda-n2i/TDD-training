@@ -22,7 +22,7 @@ model: sonnet
 
 1. **SCAFFOLD** — 型 / interface 定義 + `throw new Error('Not implemented')` スタブ
 2. **RED** — 受け入れ条件 1 つに Arrange–Act–Assert テストを 1 本書き、期待どおりに失敗確認
-3. **SPEC-CHECK** — 書いたテストが対応する仕様と意味的に一致しているか確認（spec があれば）
+3. **SPEC-CHECK** — **spec-check** エージェントを呼ぶ（manifest: target=書いたテスト / reference=該当 REQ＋spec / scope=仕様↔テスト整合 / output=PASS/FAIL＋routeToPhase）。FAIL なら指された通り直してから GREEN へ。spec がなければスキップ。
 4. **GREEN** — 最小実装でテストを通す
 5. **REFACTOR** — 緑のまま整える
 6. 次の受け入れ条件へ戻り繰り返す → COVERAGE（80%+）→ OUTER LOOP 確認

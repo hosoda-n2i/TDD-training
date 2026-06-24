@@ -19,6 +19,7 @@ model: opus
   - E2E spec（`e2e/**/*.spec.ts`）
   - integration / unit テスト（`*.test.ts(x)` / `*.spec.ts(x)`）
   - EARS 仕様があれば `.claude/tdd/specs/*.md`（任意入力。spec はテストの上位権威ではなく受け入れ条件の参照）
+  - 該当 REQ-ID（`@covers` タグを grep するか、spec から特定する）
 - `.claude/rules/tdd-flow.md` — dual-loop の規律（戻すべきフェーズの定義）
 - `.claude/rules/testing.md` — テストの書き方・モック方針（anti-slop の基準）
 - 審査対象の差分（`git diff` の範囲は呼び出し元が指定する）
