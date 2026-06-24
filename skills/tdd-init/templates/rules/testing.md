@@ -168,6 +168,46 @@ vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
 
 ---
 
+## VDD ハードニング（緑の後の検証強化）
+
+example-based なテストが緑になった後、`/harden`（`verifier` agent）で次の 2 つを上乗せして「テストの効き」を上げる。**property は「どこまで広く」、mutation は「どこまで深く」テストが効いているか**の検証で、互いを補う。
+
+### property-based testing（fast-check）
+
+個別の入力例ではなく、入力空間全体に対して成り立つべき**不変条件**を検証する。純粋ロジック関数（入出力が閉じ、副作用が無いもの）が主対象。
+
+```ts
+import { test, expect } from 'vitest'
+import fc from 'fast-check'
+import { sortNumbers } from './sort-numbers'
+
+test('sortNumbers は冪等で、要素を保存し、昇順になる', () => {
+  fc.assert(
+    fc.property(fc.array(fc.integer()), (arr) => {
+      const sorted = sortNumbers(arr)
+      // output is ascending
+      for (let i = 1; i < sorted.length; i++) expect(sorted[i - 1] <= sorted[i]).toBe(true)
+      // idempotent
+      expect(sortNumbers(sorted)).toEqual(sorted)
+      // preserved as a multiset
+      expect([...sorted].sort((a, b) => a - b)).toEqual([...arr].sort((a, b) => a - b))
+    }),
+  )
+})
+```
+
+代表的な不変条件: roundtrip（`decode(encode(x)) === x`）/ 冪等（`f(f(x)) === f(x)`）/ 可換・結合 / 出力域（出力が常に満たす範囲・形）/ 例外条件（不正入力で必ず throw する・しない）。反例が出たら、実装とテスト（不変条件の理解）のどちらが誤りかを判断して直す。
+
+### mutation testing（Stryker）
+
+テストの**「殺傷力」を測る**。実装をわざと書き換えた変異体（mutant）を流し、テストがそれを検出（kill）できるかを見る。**生存ミュータント（survived）＝テストが見逃しているケース**なので、それを kill する最小のテストを足して潰す（既存テストは消さない・上乗せ）。
+
+- 実行は `{{MUTATION_CMD}}`（重いので対象を絞って回し、全体実行は仕上げに 1 回）。
+- mutation score の閾値はプロジェクトの `stryker.config.json` の `thresholds` に従う。等価ミュータント（原理的に kill できない変異）は無理に潰さず理由を残す。
+- DB / ドメインロジックはモックしない方針はここでも同じ。過剰モックは生存ミュータントを増やす。
+
+---
+
 ## E2E テスト（Playwright）
 
 ### ファイル構成

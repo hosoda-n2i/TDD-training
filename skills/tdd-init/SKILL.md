@@ -129,6 +129,26 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - 既存があれば再利用、無ければ導入。devDeps: `vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @vitest/coverage-v8`
 - `vitest.config.mts`（jsdom 環境・`@/` エイリアス・setup ファイル）、`vitest.setup.ts`、`package.json` に `test` / `test:watch` / `test:coverage` / `typecheck` を追加。
 
+#### (a-vdd) VDD ツール（property-based + mutation）— `/harden` 用に整える
+
+緑の後の検証強化（`/harden`・`verifier` agent）で使う 2 ツールを導入する。Vitest の上に乗るので (a) の後に入れる。
+
+- devDeps を追加: `fast-check`（property-based）, `@stryker-mutator/core` + `@stryker-mutator/vitest-runner`（mutation。runner が Vitest を testRunner にする。`@stryker-mutator/vitest-runner` の peer に `vitest >=2.0.0` が要る）。
+  - **パッケージ名は実在を確認してから書く**（`{{PKG_MANAGER}}` の `view`/`info` 等）。捏造しない。
+- **Stryker 設定ファイルを生成**: プロジェクトルートに `stryker.config.json`（無ければ）。`testRunner` を `vitest` にし、`mutate` の対象を**純ロジック中心**に絞る（コンポーネント全体に広げない）。例:
+  ```json
+  {
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "testRunner": "vitest",
+    "reporters": ["html", "clear-text", "progress"],
+    "mutate": ["src/**/*.ts", "!src/**/*.test.ts", "!src/**/*.spec.ts"],
+    "coverageAnalysis": "perTest",
+    "thresholds": { "high": 80, "low": 60, "break": null }
+  }
+  ```
+  - `mutate` のパスは検出した `{{SRC_LAYOUT}}` に合わせる。`thresholds.break` は導入初期は `null`（落とさない）にしておき、ゲート化しない。
+- `package.json` に `mutation` script（例: `"mutation": "stryker run"`）を追加し、`{{MUTATION_CMD}}` をそれにする（script が無ければ `npx stryker run`）。
+
 #### (b) 統合(integration) の実行基盤
 - **境界モック**: 追加基盤は不要。`rules/testing.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
 - **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を生成し、Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。**ポート・DB 名は env 変数（`$TEST_DB_PORT` / `$TEST_DB_NAME`）で実行時に解決**するテンプレを使う。「未実装・必要時に」で**終わらせない**。
@@ -167,6 +187,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - **unit**: 簡単な 1 テスト（例: `expect(1 + 1).toBe(2)`）
 - **integration（実 DB を使う場合）**: テスト DB に接続して 1 件 CRUD する最小テスト
 - **E2E**: ログイン状態でトップ等を開く最小シナリオ 1 本（`storageState` が効くか）
+- **VDD（任意の追加スモーク）**: `fast-check` を import した property test 1 本が緑になる／`{{MUTATION_CMD}}`（`stryker run`）が起動して結果を出す、を**軽く**確認する。重いので必須化しない（導入可否は (a-vdd) を含めて step 4 冒頭のまとめ確認に含める）。
 
 ここで通らなければ、`test-strategy.md` に「対象外」と書いて逃げず、**通るところまで直す**（または本当に対象外なら理由を明記）。
 
