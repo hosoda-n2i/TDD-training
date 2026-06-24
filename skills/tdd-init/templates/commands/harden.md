@@ -17,7 +17,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 `$ARGUMENTS`（省略時は直近の変更）を対象に、**`verifier` サブエージェント**を呼んでハードニングする。
 
-1. **前提確認** — 対象の example-based テストが**緑**であることを確認する（赤なら `/tdd` で緑にしてから戻る）。
+1. **前提確認** — 対象の example-based テストが**緑**であることを確認する（赤なら `/tdd` で緑にしてから戻る）。spec があれば対象機能の REQ-ID を grep で特定し、verifier への **reference** に含める。
 2. **property-based（fast-check）** — verifier に不変条件の property test を書かせ実行させる（`@.claude/rules/testing.md` の property-based 節参照）。反例が出たら実装かテストのどちらが正しいか判断して修正させる。
 3. **mutation（Stryker）** — verifier に `{{MUTATION_CMD}}` を実行させ、生存ミュータントを kill するテストを追加させる（`@.claude/rules/testing.md` の mutation 節参照）。
 4. **報告** — 追加 / 強化したテスト、見つかったバグ、**mutation score（before → after）**、残った生存ミュータント（kill しなかった理由）。

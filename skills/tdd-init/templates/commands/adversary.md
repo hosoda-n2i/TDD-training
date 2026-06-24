@@ -23,6 +23,7 @@ allowed-tools: Bash(git:*), Read, Grep, Glob, Agent
   - E2E spec（`e2e/**/*.spec.ts`）
   - integration / unit テスト（`*.test.ts(x)` / `*.spec.ts(x)`）
   - EARS 仕様があれば `.claude/tdd/specs/*.md`（任意入力。spec はテストの上位権威ではなく受け入れ条件の参照）
+  - 該当 REQ-ID（spec があれば `@covers` タグを grep で特定）を **reference に含める**
 
 ### Step 2: adversary サブエージェントを呼ぶ
 
