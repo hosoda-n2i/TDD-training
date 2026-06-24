@@ -1,5 +1,5 @@
 ---
-description: 仕様駆動 TDD の内側ループ（SCAFFOLD → RED → GREEN → REFACTOR）を駆動する。受け入れ条件＝対応する E2E spec（または integration test）が緑になるまで内部を組み上げる。
+description: 仕様駆動 TDD の内側ループ（SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR）を駆動する。受け入れ条件＝対応する E2E spec（または integration test）が緑になるまで内部を組み上げる。
 argument-hint: <機能名 / 受け入れ条件 / e2e spec ファイルパス>
 allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Glob, Agent
 ---
@@ -22,11 +22,12 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 1. **SCAFFOLD** — 型/interface を定義し、対象関数/コンポーネントを `throw new Error('Not implemented')` でスタブする。テストが import するシグネチャを**物理的に確定**する。
 2. **RED** — 受け入れ条件1つに対応するテストを1本書く。`{{TEST_UNIT_FILE_CMD}}` を実行し、**期待どおりに**失敗することを確認する（構文エラーではなく、未実装ゆえの AssertionError か）。
-3. **GREEN** — テストを通すための**最小実装**を書く。`{{TEST_UNIT_FILE_CMD}}` で緑を確認する。
-4. **REFACTOR** — 重複除去・命名整理・定数抽出。**毎回テストを走らせて**緑を維持する。
-5. **REPEAT** — 次の受け入れ条件に進んで step 2 へ。
-6. **COVERAGE** — `{{COVERAGE_CMD}}` を実行し、**80%+** を確認する。届かなければ未カバーの受け入れ条件を追加する。
-7. **OUTER LOOP** — `$ARGUMENTS` が E2E spec なら、最後に `{{TEST_E2E_FILE_CMD}} $ARGUMENTS` を実行して外側ループが緑になったか確認する。赤のままなら何が足りないかを報告し、必要なら次の `/tdd` 対象に分解する。
+3. **SPEC-CHECK** — 書いたテストが対応する仕様（EARS の REQ、または受け入れ条件）と意味的に一致しているか確認する。**観点は仕様↔テスト整合のみ**（テストの強さ・網羅・実装の正しさは見ない）。spec または受け入れ条件が文章化されている場合のみ実施。spec が無ければスキップ。ずれていたらテストを仕様に合わせて直す（実装に合わせてテストを歪めない）。
+4. **GREEN** — テストを通すための**最小実装**を書く。`{{TEST_UNIT_FILE_CMD}}` で緑を確認する。
+5. **REFACTOR** — 重複除去・命名整理・定数抽出。**毎回テストを走らせて**緑を維持する。
+6. **REPEAT** — 次の受け入れ条件に進んで step 2 へ。
+7. **COVERAGE** — `{{COVERAGE_CMD}}` を実行し、**80%+** を確認する。届かなければ未カバーの受け入れ条件を追加する。
+8. **OUTER LOOP** — `$ARGUMENTS` が E2E spec なら、最後に `{{TEST_E2E_FILE_CMD}} $ARGUMENTS` を実行して外側ループが緑になったか確認する。赤のままなら何が足りないかを報告し、必要なら次の `/tdd` 対象に分解する。
 
 ## Rules
 

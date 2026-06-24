@@ -1,6 +1,6 @@
 ---
 name: tdd-guide
-description: Inner loop の TDD 専任。SCAFFOLD → RED → GREEN → REFACTOR を厳格に回し、外側ループ（E2E / integration）の RED を緑にする内部を 1 ケースずつ組み上げる。新機能・バグ修正・リファクタの実装フェーズで `/tdd` から呼ばれる。
+description: Inner loop の TDD 専任。SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR を厳格に回し、外側ループ（E2E / integration）の RED を緑にする内部を 1 ケースずつ組み上げる。新機能・バグ修正・リファクタの実装フェーズで `/tdd` から呼ばれる。
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 model: sonnet
 ---
@@ -49,7 +49,23 @@ export function doSomething(input: Input): Output {
 - `Not implemented` で落ちているなら **未実装ゆえの正しい RED**（次へ）
 - テストが緑なら **テストが何も検証していない可能性**（見直す）
 
-### 3. GREEN — 最小実装
+### 3. SPEC-CHECK — 仕様↔テスト整合確認
+
+対応する REQ / 受け入れ条件を開いて 1 対 1 で突き合わせる。
+
+- **確認する（IN スコープ）**:
+  - REQ の trigger→response が、テストの Arrange/Act → Assert に正しく写せているか
+  - 期待値が**仕様由来**か（実装の出力をコピーしたミラーになっていないか）
+  - その REQ に対応するテストが存在し、REQ に無いことを勝手に assert していないか（過不足）
+- **参照**:
+  - `.claude/rules/spec-conventions.md`（EARS の規約）
+  - `/spec` を使っていれば `.claude/tdd/specs/<slug>.md`
+- **スコープ外（ここでは見ない）**: テストコード自体の品質・強さ・入力網羅・実装の正しさ → それぞれ `/adversary`・`/harden`（受け入れ条件が緑になってから）・GREEN で扱う。
+- **適用条件**: 照合先の仕様がある時だけ（`/spec` を使った、または受け入れ条件が文章化されている）。テスト＝仕様（spec 無し経路）なら**スキップ**。
+
+ずれていたらテストを仕様に合わせて直す。仕様が曖昧・誤りなら `/spec` に戻る。**実装に合わせてテストを歪めない。**
+
+### 4. GREEN — 最小実装
 
 テストを通すための**最も小さい実装**を書く。**早すぎる抽象化をしない**（重複が出てきたら REFACTOR で消す）。
 
@@ -59,19 +75,19 @@ export function doSomething(input: Input): Output {
 
 で緑を確認する。
 
-### 4. REFACTOR — 緑のまま改善
+### 5. REFACTOR — 緑のまま改善
 
 重複除去 / 命名整理 / 定数抽出 / 早期 return。**1 変更ごとにテストを走らせて緑を維持**する。緑が崩れた瞬間に巻き戻す。
 
-### 5. REPEAT — 次の受け入れ条件へ
+### 6. REPEAT — 次の受け入れ条件へ
 
 次のケースに進み、step 1（または step 2）から繰り返す。スタブの中身が育っていくイメージ。
 
-### 6. COVERAGE — カバレッジ確認
+### 7. COVERAGE — カバレッジ確認
 
 `{{COVERAGE_CMD}}` を実行し、**80%+** を確認する。届かなければ未カバーの分岐 / 異常系をテストとして追加する。
 
-### 7. OUTER LOOP — 外側ループの確認
+### 8. OUTER LOOP — 外側ループの確認
 
 呼び出し元から E2E spec のパスを渡されている場合、最後に:
 
