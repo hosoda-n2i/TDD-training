@@ -44,3 +44,22 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 - ドメイン語彙は CLAUDE.md の用語表に揃える。
 - 推測で要件を盛らない。曖昧な点は「未確定」として残し、`/e2e`・`/tdd` での具体化に委ねる。
 - UI テキストは {{UI_LANGUAGE}}。
+
+## delta モード（`--delta` または既存 spec への変更指示）
+
+引数が `--delta <変更内容>` の形式、または既存 spec へのラフな変更指示である場合:
+
+### Step 1: 既存 spec を読む
+
+`.claude/tdd/specs/<slug>.md` を開き、現行の REQ-ID と EARS 文を把握する。
+
+### Step 2: 更新版 EARS ＋ 変更セットを出力する
+
+`@.claude/rules/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って変更を反映する。spec ファイルを上書きし、末尾の `## 変更セット` セクションに変更内容を記録する（書式は `spec-conventions.md` の「変更セット」節に従う）。
+
+### Step 3: 次を案内する
+
+```
+/impact REQ-NNN,REQ-NNN  → 影響範囲レポート（追加/変更/削除すべきテスト・回帰セット）
+/tdd <spec>               → 差分スコープで内側ループを実行
+```
