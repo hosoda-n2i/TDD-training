@@ -22,16 +22,11 @@ allowed-tools: Bash(git:*), Read, Grep, Glob, Agent
 - 受け入れ条件の在り処を洗い出して **adversary に渡す**:
   - E2E spec（`e2e/**/*.spec.ts`）
   - integration / unit テスト（`*.test.ts(x)` / `*.spec.ts(x)`）
-  - EARS 仕様があれば `.claude/tdd/specs/*.md`（**任意入力**。spec はテストの上位権威ではなく受け入れ条件の参照）
+  - EARS 仕様があれば `.claude/tdd/specs/*.md`（任意入力。spec はテストの上位権威ではなく受け入れ条件の参照）
 
 ### Step 2: adversary サブエージェントを呼ぶ
 
-`adversary` agent を呼び出し、次を渡して独立審査させる:
-
-- 審査対象の差分範囲（`git diff` のコマンド or ファイル一覧）
-- Step 1 で集めた受け入れ条件の在り処（spec / E2E / integration のパス）
-
-adversary は会話履歴を共有しないフレッシュな文脈で、5 次元（Acceptance Fidelity / Edge Case Coverage / Implementation Correctness / Test Quality / Structural Integrity）を **PASS/FAIL** で判定し、AND ロジックで総合判定を出す。各 finding には `file:line` と証拠スニペット、`routeToPhase` が付く。
+**adversary agent を呼び出し**、Step 1 で集めた差分範囲と受け入れ条件の在り処を渡す（5次元の判定規律・強制否定・出力フォーマットは adversary agent が自身の rules に従って判定する）。
 
 ### Step 3: 結果を報告する
 
@@ -46,5 +41,4 @@ adversary の返した内容を、次の形で整理して報告する:
 
 - **ゲートではない。** 自動でブロックしない。独立判定を返し、次手は人間 / メインが決める。
 - adversary は **判定するだけ**でコードを直さない。修正は `/tdd`・`/e2e`・`/spec` 側で行う。
-- findings は必ず `file:line` と証拠付き。証拠の無い総評（「概ね良い」等）は報告に載せない。
-- これは `/review`（自己点検）の置き換えではない。**独立した第二の目**として、完了前や PR 前に併用する。
+- これは `/review`（自己点検）の置き換えではない。**独立した第二の目**として完了前や PR 前に併用する。
