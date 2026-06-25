@@ -77,6 +77,15 @@ flowchart TD
 - 常時効く規律は `tdd-flow.md`。`testing.md`・`typescript.md`・`spec-conventions.md` は対象ファイルを編集した時だけ自動添付。
 - `/review` は随時の**同一コンテキスト**セルフ点検（`/adversary`＝独立コンテキストとは別物）。`/spec` は任意・非ゲート。
 
+## 追加仕様（incremental）フロー
+
+既存機能への仕様変更は**別フローを作らず、既存ループに差分の前段と 2 ゲートを加算**する。
+
+1. `/spec --delta <変更内容>` — 更新 EARS ＋ 変更セット（追加/変更/削除 REQ-ID）を spec に記録
+2. `/impact <変更 REQ 群>` — `impact-analyzer` が影響レポート（追加/変更/削除すべきテスト・影響コード・回帰セット）を返す
+3. `/tdd <spec>`（差分スコープ）— SCAFFOLD → RED → **DIFF-CHECK**（変更 REQ ↔ テスト変更 1:1・orphan 検出）→ GREEN → REFACTOR
+4. 完了前に **回帰ゲート**（`/impact` の回帰セットを全実行して緑確認）→ `/harden`（影響箇所）→ `/adversary`（新 REQ を満たし旧 REQ を壊していないか）
+
 ## 生成されるコマンド
 
 | コマンド | 役割 |
