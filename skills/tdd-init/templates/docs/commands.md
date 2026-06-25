@@ -12,6 +12,14 @@
 | watch | `{{TEST_UNIT_WATCH_CMD}}` |
 | カバレッジ | `{{COVERAGE_CMD}}` |
 
+## VDD ハードニング（property / mutation）
+| 目的 | コマンド |
+|------|----------|
+| property-based（fast-check） | unit と同じ Vitest で実行（`{{TEST_UNIT_FILE_CMD}}`） |
+| mutation（Stryker） | `{{MUTATION_CMD}}` |
+
+> property-based は専用コマンドではなく Vitest 上で回す（テストファイルに `fast-check` を import）。mutation は `/harden` で緑の後に対象を絞って実行する。
+
 ## E2E（Playwright）
 | 目的 | コマンド |
 |------|----------|

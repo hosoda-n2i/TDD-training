@@ -31,10 +31,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 **e2e-guide** agent を呼び出して dual-loop TDD の外側ループを駆動する:
 
-1. **RED** — 仕様（ユーザー操作フロー）を Playwright spec として書く。実装が無いので失敗する状態にする。
-   - 配置: `e2e/{{E2E_FEATURE_DIR}}/<feature>.spec.ts`
-   - セレクタは `getByRole` / `getByLabel` / `getByText` を優先（脆い CSS セレクタ禁止）
-   - 認証が必要なフローは `{{E2E_AUTH_FIXTURE}}` のフィクスチャを使う
+1. **RED** — 仕様（ユーザー操作フロー）を Playwright spec として書く（`e2e/{{E2E_FEATURE_DIR}}/<feature>.spec.ts`）。セレクタ規約・認証 fixture は `@.claude/rules/tdd/testing.md` に従う。実装が無いので失敗する状態にする。
 2. **CONFIRM RED** — `{{TEST_E2E_FILE_CMD}} <作った spec>` を実行し、**期待どおり**赤になることを確認（構文エラーではなく「ページが無い／要素が無い／レスポンスが違う」で落ちているか）。
 3. **WORK ITEMS** — この E2E を緑にするために必要なものを列挙する:
    - page / route（`page.tsx`）
@@ -55,6 +52,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 ## Rules
 
 - E2E は **acceptance criteria の物理的な実体**。仕様の言葉で test 名を書く。
+- spec（`.claude/tdd/specs/*.md`）が渡された場合は REQ の言葉でシナリオ名を書く。spec はゲートではなく、無くても機能説明から書ける。
 - UI/画面のないバックエンド機能は E2E の対象外。**integration test を acceptance に**して `/tdd` に直接入る。
-- 認証・テストデータの扱いは `.claude/rules/testing.md` に従う。
+- 認証・テストデータの扱いは `@.claude/rules/tdd/testing.md` に従う。
 - 1機能あたり主要フロー 1〜数本に絞る。境界・異常系は inner loop（unit/integration）に寄せる。
