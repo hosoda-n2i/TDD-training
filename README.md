@@ -73,9 +73,10 @@ flowchart TD
 ```
 
 - SPEC-CHECK＝仕様↔テスト整合（緑化前・RED 直後）、`/harden`＝テスト自体の強化（緑化後）
-- `/e2e`・`/tdd`・`/harden`・`/adversary` の 4 コマンドだけがサブエージェントを呼ぶ。`/spec`・`/test`・`/fix`・`/review`・`/db` はメイン文脈で完結。
+- サブエージェントを呼ぶコマンド: `/e2e`（e2e-guide）・`/tdd`（tdd-guide → spec-check）・`/harden`（verifier）・`/adversary`（adversary）・`/impact`（impact-analyzer）。それ以外はメイン文脈で完結。
 - 常時効く規律は `tdd-flow.md`。`testing.md`・`typescript.md`・`spec-conventions.md` は対象ファイルを編集した時だけ自動添付。
 - `/review` は随時の**同一コンテキスト**セルフ点検（`/adversary`＝独立コンテキストとは別物）。`/spec` は任意・非ゲート。
+- テストと仕様の結合キーは `@covers REQ-NNN` タグ（`rules/spec-conventions.md`・`rules/testing.md`）。追加仕様時の変更セット管理・DIFF-CHECK・回帰ゲートの詳細は `rules/tdd-flow.md`（インライン manifest 契約）を参照。
 
 ## 追加仕様（incremental）フロー
 
@@ -91,9 +92,10 @@ flowchart TD
 | コマンド | 役割 |
 |----------|------|
 | `/tdd-init` | （セットアップ）ドメイン検出・基盤導入・上記の生成。最初の 1 回だけ |
-| `/spec` | （任意）EARS 形式の構造化仕様を `.claude/tdd/specs/<slug>.md` に起こす。ゲートではない |
+| `/spec` | （任意）EARS 形式の構造化仕様を `.claude/tdd/specs/<slug>.md` に起こす。ゲートではない。`--delta` で追加仕様の変更セット（追加/変更/削除 REQ-ID）も記録 |
 | `/e2e` | 外側ループ。E2E spec を先に書く（RED）→ 必要な実装を列挙して inner loop の work item にする |
-| `/tdd` | 内側ループ。SCAFFOLD → RED → GREEN → REFACTOR を `tdd-guide` agent に駆動させる |
+| `/tdd` | 内側ループ。SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR を `tdd-guide` agent に駆動させる |
+| `/impact` | 仕様変更の影響範囲を `impact-analyzer` で解析。追加/変更/削除すべきテスト・影響コード・回帰セットを返す |
 | `/test` | unit / integration テストの実行＋解析 |
 | `/fix` | lint / format / typecheck の自動修正チェーン |
 | `/harden` | （推奨）VDD ハードニング。property-based + mutation を `verifier` agent に駆動させる |
@@ -111,7 +113,7 @@ TDD-training/
         ├── SKILL.md                 # 汎用ジェネレータ本体（/tdd-init）
         └── templates/               # 生成元（{{...}} を検出・ドメイン情報で置換）
             ├── commands/            # → <project>/.claude/commands/*
-            │   ├── spec.md          #   /spec   （EARS 仕様・任意）
+            │   ├── spec.md          #   /spec   （EARS 仕様・任意。--delta で変更セット記録）
             │   ├── e2e.md           #   /e2e    （外側ループ）
             │   ├── tdd.md           #   /tdd    （内側ループ）
             │   ├── test.md          #   /test
@@ -119,12 +121,15 @@ TDD-training/
             │   ├── harden.md        #   /harden （VDD）
             │   ├── review.md        #   /review （同一コンテキスト）
             │   ├── adversary.md     #   /adversary（独立コンテキスト）
+            │   ├── impact.md        #   /impact （影響範囲解析）
             │   └── db.md            #   /db     （DB がある場合）
             ├── agents/              # → <project>/.claude/agents/*
             │   ├── tdd-guide.md     #   内側ループ専任（model: sonnet）
             │   ├── e2e-guide.md     #   外側ループ専任（model: sonnet）
             │   ├── verifier.md      #   VDD ハードニング専任（model: sonnet）
-            │   └── adversary.md     #   独立レビュー専任（model: opus, 判定のみ）
+            │   ├── adversary.md     #   独立レビュー専任（model: opus, 判定のみ）
+            │   ├── spec-check.md    #   仕様↔テスト整合判定専任（model: sonnet, 判定のみ）
+            │   └── impact-analyzer.md  #   影響範囲解析専任（model: sonnet, 解析のみ）
             ├── rules/               # → <project>/.claude/rules/*
             │   ├── tdd-flow.md      #   dual-loop の規律（常時適用）
             │   ├── testing.md       #   テストの書き方・実コード例（property/mutation 含む）

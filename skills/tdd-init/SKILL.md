@@ -1,6 +1,6 @@
 ---
 name: tdd-init
-description: TypeScript / Node.js（主に Next.js）プロジェクトを **dual-loop TDD**（外側 E2E ／ 内側 unit-integration）で開発できる状態にするブートストラップスキル。プロジェクトのドメインを読み取り、そのプロジェクト固有の slash commands（`/e2e` `/tdd` `/test` `/fix` `/review` `/db`、加えて任意の `/spec`＝EARS 仕様・`/harden`＝VDD・`/adversary`＝独立レビュー）と subagents（`tdd-guide` `e2e-guide` `verifier` `adversary`）、auto-apply rules、テスト実行基盤（Vitest / Playwright / fast-check / Stryker / テスト DB / storageState）まで揃えた上で、CLAUDE.md をドメイン情報入りで書き起こす。テストをまだ書いていないプロジェクトにも適用できる。「TDD をセットアップ」「tdd-init」「dual-loop TDD の準備」等と言われたら使う。一度実行すれば以降は `/e2e` → `/tdd` で開発する。
+description: TypeScript / Node.js（主に Next.js）プロジェクトを **dual-loop TDD**（外側 E2E ／ 内側 unit-integration）で開発できる状態にするブートストラップスキル。プロジェクトのドメインを読み取り、そのプロジェクト固有の slash commands（`/e2e` `/tdd` `/test` `/fix` `/review` `/db` `/impact`、加えて任意の `/spec`＝EARS 仕様・`/harden`＝VDD・`/adversary`＝独立レビュー）と subagents（`tdd-guide` `e2e-guide` `verifier` `adversary` `spec-check` `impact-analyzer`）、auto-apply rules、テスト実行基盤（Vitest / Playwright / fast-check / Stryker / テスト DB / storageState）まで揃えた上で、CLAUDE.md をドメイン情報入りで書き起こす。テストをまだ書いていないプロジェクトにも適用できる。「TDD をセットアップ」「tdd-init」「dual-loop TDD の準備」等と言われたら使う。一度実行すれば以降は `/e2e` → `/tdd` で開発する。
 ---
 
 # tdd-init — dual-loop TDD 環境のブートストラップ（ジェネレータ）
@@ -28,9 +28,10 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 ### `.claude/commands/`（slash commands — dual-loop の入口）
 | パス | 役割 |
 |------|------|
-| `.claude/commands/spec.md` | `/spec` … EARS 形式の構造化仕様を起こす（**任意入力。ゲートではない**）。acceptance の実体はテスト |
+| `.claude/commands/spec.md` | `/spec` … EARS 形式の構造化仕様を起こす（**任意入力。ゲートではない**）。`--delta` で追加仕様の変更セット（追加/変更/削除 REQ-ID）も記録 |
 | `.claude/commands/e2e.md` | `/e2e` … 外側ループ。E2E spec を先に書く（RED）→ 必要な実装を列挙して inner loop の work item にする |
-| `.claude/commands/tdd.md` | `/tdd` … 内側ループ。SCAFFOLD → RED → GREEN → REFACTOR を `tdd-guide` agent に駆動させる |
+| `.claude/commands/tdd.md` | `/tdd` … 内側ループ。SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR を `tdd-guide` agent に駆動させる |
+| `.claude/commands/impact.md` | `/impact` … 仕様変更の影響範囲を `impact-analyzer` で出す（追加/変更/削除すべきテスト・影響コード・回帰セット） |
 | `.claude/commands/test.md` | `/test` … unit / integration テスト実行＋解析 |
 | `.claude/commands/fix.md` | `/fix` … lint / format / typecheck の自動修正チェーン |
 | `.claude/commands/harden.md` | `/harden` … VDD ハードニング。緑の後に property-based（fast-check）+ mutation（Stryker）を `verifier` agent に駆動させる |
@@ -41,15 +42,17 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 ### `.claude/agents/`（subagents）
 | パス | 役割 |
 |------|------|
-| `.claude/agents/tdd-guide.md` | 内側ループ専任（model: sonnet）。`/tdd` から呼ばれて SCAFFOLD → RED → GREEN → REFACTOR を厳格に回す |
+| `.claude/agents/tdd-guide.md` | 内側ループ専任（model: sonnet）。`/tdd` から呼ばれて SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR を厳格に回す。SPEC-CHECK では `spec-check` を入れ子呼びする |
 | `.claude/agents/e2e-guide.md` | 外側ループ専任（model: sonnet）。`/e2e` から呼ばれて E2E spec を RED で書き、必要な実装を列挙する（E2E 対象プロジェクトのみ） |
 | `.claude/agents/verifier.md` | VDD ハードニング専任（model: sonnet）。`/harden` から呼ばれて property-based + mutation でテストの広さ・深さを強化する |
 | `.claude/agents/adversary.md` | 独立レビュー専任（model: opus、Edit/Write なし＝判定のみ）。`/adversary` から呼ばれて 5 次元バイナリ判定で PASS/FAIL を出す |
+| `.claude/agents/spec-check.md` | 仕様↔テスト整合判定専任（model: sonnet、Edit/Write なし）。`/tdd` の SPEC-CHECK ステップで tdd-guide から呼ばれる |
+| `.claude/agents/impact-analyzer.md` | 影響範囲解析専任（model: sonnet、Edit/Write なし）。`/impact` から呼ばれて変更セットの影響レポートを返す |
 
 ### `.claude/rules/`（auto-apply rules）
 | パス | 役割 |
 |------|------|
-| `.claude/rules/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`） |
+| `.claude/rules/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`）。追加仕様時のインライン manifest 契約（変更セット・DIFF-CHECK・回帰ゲート）を含む |
 | `.claude/rules/testing.md` | テストの書き方・実コード例（unit / integration / E2E）。`*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` / `vitest.config.*` / `playwright.config.*` を編集中なら**自動添付** |
 | `.claude/rules/typescript.md` | TypeScript 規約。`*.ts` / `*.tsx` を編集中なら自動添付 |
 | `.claude/rules/spec-conventions.md` | EARS 仕様の規約（パターン早見・REQ-ID・異常系必須・スコープ外明記）。`.claude/tdd/specs/**` を編集中なら**自動添付** |
@@ -203,8 +206,8 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 ### 5. commands / agents を生成する
 
-- `templates/commands/*` → `.claude/commands/*`（`spec` / `e2e` / `tdd` / `test` / `fix` / `harden` / `review` / `adversary` / `db`）
-- `templates/agents/*` → `.claude/agents/*`（`tdd-guide`・`e2e-guide`・`verifier`＝model: sonnet／`adversary`＝model: opus。frontmatter の `model` はテンプレのまま維持する）
+- `templates/commands/*` → `.claude/commands/*`（`spec` / `e2e` / `tdd` / `test` / `fix` / `harden` / `review` / `adversary` / `db` / `impact`）
+- `templates/agents/*` → `.claude/agents/*`（`tdd-guide`・`e2e-guide`・`verifier`・`spec-check`・`impact-analyzer`＝model: sonnet／`adversary`＝model: opus。frontmatter の `model` はテンプレのまま維持する。`tdd-guide` は SPEC-CHECK ステップで `spec-check` を入れ子呼びする）
 - `{{...}}` を 2〜4 の結果で置換（新規変数 `{{MUTATION_CMD}}` を忘れない）
 - 「対象外」のものはスキップ:
   - E2E 対象でない（純ライブラリ等）→ `e2e.md` / `e2e-guide.md` をスキップ
