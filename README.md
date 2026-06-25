@@ -69,7 +69,7 @@ flowchart TD
     end
 
     adv -->|PASS| done(("完了"))
-    adv -->|FAIL → spec/e2e/tdd へ戻る| e2e
+    adv -->|FAIL → spec/e2e/tdd/refactor へ戻る| e2e
 ```
 
 - SPEC-CHECK＝仕様↔テスト整合（緑化前・RED 直後）、`/harden`＝テスト自体の強化（緑化後）

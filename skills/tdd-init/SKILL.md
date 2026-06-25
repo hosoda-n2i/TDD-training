@@ -116,9 +116,11 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - `{{PKG_MANAGER}}` … `npm` / `pnpm` / `yarn` / `bun`（lockfile で判定）
 - 既存の **Vitest** 設定（`vitest.config.*` / devDeps）、**Playwright** 設定（`playwright.config.*`）の有無
 - `{{LINT_CMD}}` / `{{LINT_FIX_CMD}}` / `{{FORMAT_CMD}}` / `{{TYPECHECK_CMD}}` / `{{BUILD_CMD}}` / `{{DEV_CMD}}` … `package.json` の scripts から実在分（無いものは「なし」と書く）
+- `{{TEST_UNIT_FILE_CMD}}` / `{{TEST_UNIT_ALL_CMD}}` / `{{TEST_UNIT_GREP_CMD}}` / `{{TEST_UNIT_WATCH_CMD}}` / `{{COVERAGE_CMD}}` / `{{TEST_INTEGRATION_CMD}}` … test 系 script（無いものは「なし」と書く）
 - **データ層**（統合 / E2E の基盤判断に必須）:
   - `{{DB}}` … Prisma（`prisma/schema.prisma`）/ Drizzle / その他 / 無し。DB 種別（Postgres など）、マイグレーションコマンド、接続 env 名（`DATABASE_URL` 等）
   - `{{DB_GENERATE_CMD}}` / `{{DB_MIGRATE_CMD}}` / `{{DB_PUSH_CMD}}` / `{{DB_STUDIO_CMD}}` / `{{SEED_CMD}}` … 実在分
+  - `{{DB_IMAGE}}` / `{{DB_MIGRATE_ARGV}}` … テスト DB の docker イメージ・マイグレーション引数（`docker-compose.test.yml` と `integration-setup.ts` に使う）
   - `{{REPO_PATTERN}}` … データアクセスの形（repository 層をモックする規約か、実 DB か）。既存 rules / 既存テストから読む。
   - `{{DB_TEST_UTILS_SNIPPET}}` … testing.md に埋め込む実コード例（DB / ORM に応じて Drizzle / Prisma のテスト接続スニペットを差し込む）
 - **認証**（E2E のログイン基盤に必須）:
@@ -162,7 +164,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 #### (b) 統合(integration) の実行基盤
 - **境界モック**: 追加基盤は不要。`rules/testing.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
-- **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を生成し、Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。**ポート・DB 名は env 変数（`$TEST_DB_PORT` / `$TEST_DB_NAME`）で実行時に解決**するテンプレを使う。「未実装・必要時に」で**終わらせない**。
+- **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を生成し、Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。**ポート・DB 名は env 変数（`$TEST_DB_PORT` / `$TEST_DB_NAME`）で実行時に解決**するテンプレを使う。「未実装・必要時に」で**終わらせない**。`{{TEST_DB_UP_CMD}}` / `{{TEST_DB_DOWN_CMD}}`（`docker compose -f docker-compose.test.yml up/down` 由来）を `commands.md` に載せる。
 
 #### (c) E2E（Playwright）— Web アプリで、`{{DB}}` / `{{AUTH}}` も込みで“走る”状態にする
 - Playwright 未導入なら導入（`e2e/` 構成）。`.gitignore` に生成物を追加: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`, `e2e/.auth/`
@@ -223,6 +225,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - **`rules/testing.md` は実コードスニペットを埋め込む**: 検出した DB / 認証に応じて `{{DB_TEST_UTILS_SNIPPET}}` / `{{AUTH_MOCK_SNIPPET}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` / `{{PLAYWRIGHT_CONFIG_SNIPPET}}` をテンプレ実コードに展開する。Claude が真似るだけで規約を踏める形にする。property-based / mutation の節は汎用の実コード例（`fast-check`）が既に入っているのでそのまま使う。
 - `commands.md` は **実在するコマンドだけ**。無いものは「なし」と書く（捏造しない）。**統合（実 DB）・E2E を導入したら、その起動・テスト DB 立ち上げ・シードのコマンドも必ず載せる**。VDD を導入したら `{{MUTATION_CMD}}` を載せ、未導入なら mutation 行は「なし」にする。
 - **`test-infra.md`** に、step 4 で用意した実行基盤（テスト DB・認証・storageState・seed）の構成と起動手順を書く。`test-strategy.md` は **実際に用意した状態**に合わせて書く（「未実装・必要時に」で逃げない）。
+- `{{UNIT_TEST_LOCATION}}` / `{{E2E_TEST_LOCATION}}` / `{{*_POLICY}}` / `{{INTEGRATION_TARGETS}}` / `{{INTEGRATION_BOUNDARIES}}` / `{{E2E_FEATURE_DIR_EXAMPLE}}` / `{{機能名の例}}` 等は検出値ではなく**文脈で埋める placeholder** — step 2〜4 で把握した情報から補う。
 
 ### 7. CLAUDE.md をドメインリファレンス化する
 
