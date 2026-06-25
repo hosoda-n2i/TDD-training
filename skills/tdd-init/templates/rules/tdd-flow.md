@@ -94,7 +94,7 @@ FAIL や生存ミュータントが出たら、指されたフェーズ（`/spec
 
 ## レビュー入力契約（インライン manifest）
 
-レビュー（spec-check / harden / adversary）を呼ぶ側は次のフィールドを渡す:
+レビュー（spec-check / harden / adversary / impact-analyzer）を呼ぶ側は次のフィールドを渡す:
 
 - `target` — 審査対象（テストファイル・差分範囲）
 - `reference` — 該当 REQ-ID 群 ＋ 受け入れ条件 / spec パス

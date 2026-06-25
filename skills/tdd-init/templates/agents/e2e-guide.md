@@ -29,7 +29,7 @@ model: sonnet
 ## ルール
 
 - 認証が必要なフローは `{{E2E_AUTH_FIXTURE}}` の fixture を使う（毎回ログインしない）。
-- テストデータは `{{E2E_DB_FIXTURE}}` で各テスト内に seed する（共有 seed に依存しない）。
+- テストデータは `e2e/fixtures/db.ts` で各テスト内に seed する（共有 seed に依存しない）。
 - 1 `test.describe` = 1 機能。未認証アクセス・空状態・フォーム検証エラー・ローディング状態もシナリオ候補として検討する。
 - UI テキストは {{UI_LANGUAGE}} で書かれているので、セレクタも {{UI_LANGUAGE}} で指定する。
 

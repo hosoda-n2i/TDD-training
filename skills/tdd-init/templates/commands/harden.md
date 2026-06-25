@@ -15,7 +15,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 ## Your task
 
-`$ARGUMENTS`（省略時は直近の変更）を対象に、**`verifier` サブエージェント**を呼んでハードニングする。
+`$ARGUMENTS`（省略時は直近の変更）を対象に、**`verifier` サブエージェント**を呼んでハードニングする。`verifier` には `target`（対象ファイル）/ `reference`（REQ-ID・spec パス）/ `scope`（`property+mutation`）/ `output`（mutation score・反例・残存ミュータント）の manifest を渡す。
 
 1. **前提確認** — 対象の example-based テストが**緑**であることを確認する（赤なら `/tdd` で緑にしてから戻る）。spec があれば対象機能の REQ-ID を grep で特定し、verifier への **reference** に含める。
 2. **property-based（fast-check）** — verifier に不変条件の property test を書かせ実行させる（`@.claude/rules/testing.md` の property-based 節参照）。反例が出たら実装かテストのどちらが正しいか判断して修正させる。
