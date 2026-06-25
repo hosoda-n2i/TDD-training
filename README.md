@@ -166,7 +166,7 @@ TDD-training/
 
 3. **日々の開発は `/e2e` → `/tdd`。**
    - `/e2e <作りたい機能のラフな説明>` で外側ループの E2E spec を書く（RED）→ 必要な実装を列挙。
-   - `/tdd <e2e spec パス>` で内側ループ（SCAFFOLD → RED → GREEN → REFACTOR）を回す。
+   - `/tdd <e2e spec パス>` で内側ループ（SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR）を回す。
    - UI を伴わない機能は `/tdd <機能説明>` で直接 inner loop に入る（integration を acceptance にする）。
 
 4. **任意・推奨の補助コマンド。**

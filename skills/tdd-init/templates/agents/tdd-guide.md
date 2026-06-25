@@ -1,7 +1,7 @@
 ---
 name: tdd-guide
 description: Inner loop の TDD 専任。SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR を厳格に回し、外側ループ（E2E / integration）の RED を緑にする内部を 1 ケースずつ組み上げる。新機能・バグ修正・リファクタの実装フェーズで `/tdd` から呼ばれる。
-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 model: sonnet
 ---
 
