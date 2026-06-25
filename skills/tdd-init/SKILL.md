@@ -214,8 +214,10 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - 「対象外」のものはスキップ:
   - E2E 対象でない（純ライブラリ等）→ `e2e.md` / `e2e-guide.md` をスキップ
   - DB が無い → `db.md` をスキップ
-  - VDD ツール（step 4 (a-vdd)）を導入しなかった → `harden.md` / `verifier.md` をスキップ（`{{MUTATION_CMD}}` が無いため）
+  - VDD ツール（step 4 (a-vdd)）を導入しなかった → `harden.md` / `verifier.md` をスキップ（`{{MUTATION_CMD}}` が無いため）。**あわせて生成する `tdd.md`・`tdd-flow.md`（「完了前に通すこと」）内の `/harden` への言及も削除するか「VDD 導入時のみ」と注記する**（存在しないコマンドを案内しないため）
 - `spec.md`（`/spec`）と `adversary.md`（`/adversary`）は**任意機能だが常に生成**する（spec はゲートではない／adversary は判定専任で副作用が無い）。
+
+> 注: SPEC-CHECK は `tdd-guide` が `spec-check` を入れ子起動する設計のため、**Claude Code v2.1.172 以降**が前提（subagent のネスト起動が導入されたバージョン）。それ未満では SPEC-CHECK は（spec があっても）スキップされる。
 
 ### 6. rules と docs を生成する
 
@@ -225,7 +227,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - **`rules/testing.md` は実コードスニペットを埋め込む**: 検出した DB / 認証に応じて `{{DB_TEST_UTILS_SNIPPET}}` / `{{AUTH_MOCK_SNIPPET}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` / `{{PLAYWRIGHT_CONFIG_SNIPPET}}` をテンプレ実コードに展開する。Claude が真似るだけで規約を踏める形にする。property-based / mutation の節は汎用の実コード例（`fast-check`）が既に入っているのでそのまま使う。
 - `commands.md` は **実在するコマンドだけ**。無いものは「なし」と書く（捏造しない）。**統合（実 DB）・E2E を導入したら、その起動・テスト DB 立ち上げ・シードのコマンドも必ず載せる**。VDD を導入したら `{{MUTATION_CMD}}` を載せ、未導入なら mutation 行は「なし」にする。
 - **`test-infra.md`** に、step 4 で用意した実行基盤（テスト DB・認証・storageState・seed）の構成と起動手順を書く。`test-strategy.md` は **実際に用意した状態**に合わせて書く（「未実装・必要時に」で逃げない）。
-- `{{UNIT_TEST_LOCATION}}` / `{{E2E_TEST_LOCATION}}` / `{{*_POLICY}}` / `{{INTEGRATION_TARGETS}}` / `{{INTEGRATION_BOUNDARIES}}` / `{{E2E_FEATURE_DIR_EXAMPLE}}` / `{{機能名の例}}` 等は検出値ではなく**文脈で埋める placeholder** — step 2〜4 で把握した情報から補う。
+- `{{UNIT_TEST_LOCATION}}` / `{{E2E_TEST_LOCATION}}` / `{{*_POLICY}}` / `{{*_STATUS}}`（`test-infra.md`・`test-strategy.md` の適用状態欄）/ `{{INTEGRATION_TARGETS}}` / `{{INTEGRATION_BOUNDARIES}}` / `{{E2E_FEATURE_DIR_EXAMPLE}}` / `{{機能名の例}}` 等は検出値ではなく**文脈で埋める placeholder** — step 2〜4 で把握した情報から補う。
 
 ### 7. CLAUDE.md をドメインリファレンス化する
 
