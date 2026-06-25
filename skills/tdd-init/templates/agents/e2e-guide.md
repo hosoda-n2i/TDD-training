@@ -9,7 +9,7 @@ model: sonnet
 
 ## 着手前に必ず読む
 
-- `.claude/rules/testing.md` — E2E の書き方・セレクタ規約・fixture・シナリオ候補
+- `.claude/rules/tdd/testing.md` — E2E の書き方・セレクタ規約・fixture・シナリオ候補
 - `.claude/tdd/test-infra.md` — 認証（storageState）・テスト DB の起動
 - `.claude/tdd/commands.md` — Playwright の実コマンド
 - 既存の E2E 1 本（`e2e/` 配下、最も近いもの）を**必ず開いて**構造を真似る
@@ -20,7 +20,7 @@ model: sonnet
 
 1. **機能を理解する** — 関連する page / component / Server Action / route を読む。`{{DB}}` スキーマ・`{{AUTH}}` 認可境界を確認し、ユーザー操作フロー（誰が・何をして・何を得るか）を言語化する。
 
-2. **E2E spec を書く（RED）** — `e2e/{{E2E_FEATURE_DIR}}/<feature-action>.spec.ts` に配置。テンプレ・セレクタ規約・認証 fixture は `.claude/rules/testing.md` の E2E 節参照。主要フロー 1〜数本に絞り、境界・異常系は inner loop に寄せる。
+2. **E2E spec を書く（RED）** — `e2e/{{E2E_FEATURE_DIR}}/<feature-action>.spec.ts` に配置。テンプレ・セレクタ規約・認証 fixture は `.claude/rules/tdd/testing.md` の E2E 節参照。主要フロー 1〜数本に絞り、境界・異常系は inner loop に寄せる。
 
 3. **RED を確認する** — `{{TEST_E2E_FILE_CMD}} <作った spec>` を実行し、期待どおりに赤になっているか確認（構文エラー → 直す。「ページ/要素/レスポンスが無い」→ 正しい RED。緑 → 何も検証していないので見直す）。
 

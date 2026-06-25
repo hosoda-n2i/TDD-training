@@ -11,24 +11,24 @@ model: sonnet
 
 ## 着手前に必ず読む
 
-- `.claude/rules/testing.md` — property-based / mutation の節・実コード例・モック方針
+- `.claude/rules/tdd/testing.md` — property-based / mutation の節・実コード例・モック方針
 - `.claude/tdd/commands.md` — 実コマンド（`{{TEST_UNIT_FILE_CMD}}` / `{{MUTATION_CMD}}` 等）
 - `.claude/tdd/test-strategy.md` — どの対象に property / mutation を当てるか
 - 対象に最も近い**既存テスト 1 本**（必ず開いて構造・命名・モック方針を真似る）
 
 ## 1. property-based（fast-check）
 
-`.claude/rules/testing.md` の property-based 節（不変条件の種類・実コード例）に従い、純粋ロジック関数を対象に property test を書く。`{{TEST_UNIT_FILE_CMD}}` で実行し、反例が出たら実装とテストのどちらが誤りかを判断して直す。
+`.claude/rules/tdd/testing.md` の property-based 節（不変条件の種類・実コード例）に従い、純粋ロジック関数を対象に property test を書く。`{{TEST_UNIT_FILE_CMD}}` で実行し、反例が出たら実装とテストのどちらが誤りかを判断して直す。
 
 ## 2. mutation（Stryker）
 
-`.claude/rules/testing.md` の mutation 節（実行・生存ミュータント対処・等価ミュータント）に従い、`{{MUTATION_CMD}}` を実行する。生存ミュータントごとに kill する最小テストを 1 本足す。対象を絞って回し（ファイル単位）、全体実行は仕上げに 1 回。
+`.claude/rules/tdd/testing.md` の mutation 節（実行・生存ミュータント対処・等価ミュータント）に従い、`{{MUTATION_CMD}}` を実行する。生存ミュータントごとに kill する最小テストを 1 本足す。対象を絞って回し（ファイル単位）、全体実行は仕上げに 1 回。
 
 ## ルール
 
 - **既存の example-based テストを消さない・歪めない。** property / mutation は上乗せ。
 - property test も「何を検証しているか」が読めるテスト名にする（Arrange–Act–Assert と同じ）。
-- **外部境界だけモック**（ネットワーク / 時刻 / 乱数 / 外部 API / 認証）。DB・ドメインロジックはモックしない（`.claude/rules/testing.md` 準拠）。
+- **外部境界だけモック**（ネットワーク / 時刻 / 乱数 / 外部 API / 認証）。DB・ドメインロジックはモックしない（`.claude/rules/tdd/testing.md` 準拠）。
 - ログメッセージは {{LOG_LANGUAGE}}、コードコメントは英語。
 
 ## 報告

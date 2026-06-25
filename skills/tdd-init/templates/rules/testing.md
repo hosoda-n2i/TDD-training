@@ -18,7 +18,7 @@ paths:
 
 ## テスト戦略: dual-loop TDD
 
-E2E を外側ループ、unit / integration を内側ループとして回す（詳細は `.claude/rules/tdd-flow.md`）。
+E2E を外側ループ、unit / integration を内側ループとして回す（詳細は `.claude/rules/tdd/tdd-flow.md`）。
 
 ```
 外側 (E2E / Playwright)   …… ユーザー操作フロー = acceptance
@@ -66,7 +66,7 @@ E2E を外側ループ、unit / integration を内側ループとして回す（
 
 - ソースと同階層（`Button.tsx` → `Button.test.tsx`）
 - テスト名は **振る舞い** を仕様の言葉で記述する（`returns rooms for the given user` 等）
-- 対応する REQ があれば `// @covers REQ-NNN` をテスト内に記述する（詳細は `.claude/rules/spec-conventions.md`）
+- 対応する REQ があれば `// @covers REQ-NNN` をテスト内に記述する（詳細は `.claude/rules/tdd/spec-conventions.md`）
 - セマンティックセレクタを使う（`getByRole` / `getByText` / `getByLabel`）。実装詳細（内部 state / class 名）に依存しない
 
 ### 基本パターン（Arrange–Act–Assert）

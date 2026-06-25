@@ -18,7 +18,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 **tdd-guide** agent を呼び出して `SCAFFOLD → RED → SPEC-CHECK → GREEN → REFACTOR` のサイクルを回す。緑になったら `/harden` → `/adversary` の実施を推奨する。
 
-各ステップの規律は `@.claude/rules/tdd-flow.md` に従う。
+各ステップの規律は `@.claude/rules/tdd/tdd-flow.md` に従う。
 
 ## Output
 

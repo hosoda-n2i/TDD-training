@@ -49,13 +49,13 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 | `.claude/agents/spec-check.md` | 仕様↔テスト整合判定専任（model: sonnet、Edit/Write なし）。`/tdd` の SPEC-CHECK ステップで tdd-guide から呼ばれる |
 | `.claude/agents/impact-analyzer.md` | 影響範囲解析専任（model: sonnet、Edit/Write なし）。`/impact` から呼ばれて変更セットの影響レポートを返す |
 
-### `.claude/rules/`（auto-apply rules）
+### `.claude/rules/tdd/`（auto-apply rules）
 | パス | 役割 |
 |------|------|
-| `.claude/rules/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`）。追加仕様時のインライン manifest 契約（変更セット・DIFF-CHECK・回帰ゲート）を含む |
-| `.claude/rules/testing.md` | テストの書き方・実コード例（unit / integration / E2E）。`*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` / `vitest.config.*` / `playwright.config.*` を編集中なら**自動添付** |
-| `.claude/rules/typescript.md` | TypeScript 規約。`*.ts` / `*.tsx` を編集中なら自動添付 |
-| `.claude/rules/spec-conventions.md` | EARS 仕様の規約（パターン早見・REQ-ID・異常系必須・スコープ外明記）。`.claude/tdd/specs/**` を編集中なら**自動添付** |
+| `.claude/rules/tdd/tdd-flow.md` | dual-loop TDD の規律。常時適用（CLAUDE.md から `@import`）。追加仕様時のインライン manifest 契約（変更セット・DIFF-CHECK・回帰ゲート）を含む |
+| `.claude/rules/tdd/testing.md` | テストの書き方・実コード例（unit / integration / E2E）。`*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` / `vitest.config.*` / `playwright.config.*` を編集中なら**自動添付** |
+| `.claude/rules/tdd/typescript.md` | TypeScript 規約。`*.ts` / `*.tsx` を編集中なら自動添付 |
+| `.claude/rules/tdd/spec-conventions.md` | EARS 仕様の規約（パターン早見・REQ-ID・異常系必須・スコープ外明記）。`.claude/tdd/specs/**` を編集中なら**自動添付** |
 
 ### `.claude/tdd/`（参照ドキュメント）
 | パス | 役割 |
@@ -219,7 +219,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 ### 6. rules と docs を生成する
 
-- `templates/rules/*` → `.claude/rules/*`
+- `templates/rules/*` → `.claude/rules/tdd/*`（`.claude/rules/` は再帰探索されるのでサブフォルダでも `paths:` auto-apply が効く。汎用名の衝突回避のため `tdd/` に分離）
 - `templates/docs/*` → `.claude/tdd/*`（`spec-template.md` を含む。`/spec` の出力先 `.claude/tdd/specs/` も用意する＝空ディレクトリ or `.gitkeep`）
 - `testing.md` は `*.test.ts(x)` / `*.spec.ts(x)` / `e2e/**` 編集中に自動添付、`spec-conventions.md` は `.claude/tdd/specs/**` 編集中に自動添付（`paths:` ベースの auto-apply）。
 - **`rules/testing.md` は実コードスニペットを埋め込む**: 検出した DB / 認証に応じて `{{DB_TEST_UTILS_SNIPPET}}` / `{{AUTH_MOCK_SNIPPET}}` / `{{E2E_AUTH_FIXTURE_SNIPPET}}` / `{{PLAYWRIGHT_CONFIG_SNIPPET}}` をテンプレ実コードに展開する。Claude が真似るだけで規約を踏める形にする。property-based / mutation の節は汎用の実コード例（`fast-check`）が既に入っているのでそのまま使う。
@@ -278,7 +278,7 @@ dual-loop TDD（外側 E2E / 内側 unit-integration）で開発する:
 
 詳細な規律・規約は以下を参照（常時適用）:
 
-@.claude/rules/tdd-flow.md
+@.claude/rules/tdd/tdd-flow.md
 ```
 
 - **VDD ツール（step 4 (a-vdd)）を導入しなかった場合は、上記 step 4 から `/harden` を除く**（`harden.md` を生成していないため）。`/adversary` は常に生成するので残してよい。

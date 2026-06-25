@@ -105,7 +105,7 @@ FAIL や生存ミュータントが出たら、指されたフェーズ（`/spec
 ## 守ること
 
 - コマンドは `.claude/tdd/commands.md` のものだけを使う。
-- テストの配置・命名・モック方針は `.claude/rules/testing.md` に従う。
+- テストの配置・命名・モック方針は `.claude/rules/tdd/testing.md` に従う。
 - 確認ステップは最小限。1 受け入れ条件 = 1 コミット。
 - `push` はユーザーが明示したときだけ。
 - 「面倒だから」「重いから」を理由に E2E / integration を unit へ落とさない。基盤が無ければ `test-infra.md` で用意する。

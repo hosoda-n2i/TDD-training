@@ -9,8 +9,8 @@ model: sonnet
 
 ## 着手前に必ず読む
 
-- `.claude/rules/tdd-flow.md` — dual-loop の規律・各ステップ詳細
-- `.claude/rules/testing.md` — テストの書き方（実コード例あり）
+- `.claude/rules/tdd/tdd-flow.md` — dual-loop の規律・各ステップ詳細
+- `.claude/rules/tdd/testing.md` — テストの書き方（実コード例あり）
 - `.claude/tdd/test-strategy.md` — 受け入れ条件のレベル割当
 - `.claude/tdd/test-infra.md` — 統合 / E2E を走らせる基盤
 - `.claude/tdd/commands.md` — 実コマンド
@@ -18,7 +18,7 @@ model: sonnet
 
 ## サイクル
 
-各受け入れ条件に対して `@.claude/rules/tdd-flow.md` の規律に従って以下を回す:
+各受け入れ条件に対して `@.claude/rules/tdd/tdd-flow.md` の規律に従って以下を回す:
 
 1. **SCAFFOLD** — 型 / interface 定義 + `throw new Error('Not implemented')` スタブ
 2. **RED** — 受け入れ条件 1 つに Arrange–Act–Assert テストを 1 本書き、期待どおりに失敗確認
@@ -27,13 +27,13 @@ model: sonnet
 5. **REFACTOR** — 緑のまま整える
 6. 次の受け入れ条件へ戻り繰り返す → COVERAGE（80%+）→ OUTER LOOP 確認
 
-各ステップの詳細は `@.claude/rules/tdd-flow.md`。
+各ステップの詳細は `@.claude/rules/tdd/tdd-flow.md`。
 
 ## ルール
 
 - **1 サイクル = 1 テストケース。** diff を小さく保つ。
 - **振る舞いをテストする。** 内部実装の詳細（private state / クラス名）に依存しない。
-- **外部境界だけモック**（ネットワーク / 時刻 / 乱数 / 外部 API / DB）。詳細は `.claude/rules/testing.md`。
+- **外部境界だけモック**（ネットワーク / 時刻 / 乱数 / 外部 API / DB）。詳細は `.claude/rules/tdd/testing.md`。
 - {{DB}} がある場合、DB テストは実テスト DB に接続（`.claude/tdd/test-infra.md` 参照）。
 - {{AUTH}} がある場合、unit / integration は `{{AUTH_MOCK_HELPER}}` で認証モック、E2E は実際にログイン。
 - ログ: {{LOG_LANGUAGE}}、コードコメント: 英語、コミット: {{COMMIT_LANGUAGE}}。

@@ -19,13 +19,13 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 ### Step 1: 既存を読む
 
-- `@.claude/rules/spec-conventions.md` — EARS パターン・REQ-ID 規約・守ること
+- `@.claude/rules/tdd/spec-conventions.md` — EARS パターン・REQ-ID 規約・守ること
 - `.claude/tdd/spec-template.md` — 出力フォーマット
 - 関連する既存 spec（`.claude/tdd/specs/*.md`）・既存実装・CLAUDE.md の用語表
 
 ### Step 2: EARS 形式で受け入れ条件を書く
 
-`@.claude/rules/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って各要件を書く（パターン選択・REQ-ID・推奨テストレベル付与・異常系必須・スコープ外明記）。
+`@.claude/rules/tdd/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って各要件を書く（パターン選択・REQ-ID・推奨テストレベル付与・異常系必須・スコープ外明記）。
 
 ### Step 3: 出力する
 
@@ -55,7 +55,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 ### Step 2: 更新版 EARS ＋ 変更セットを出力する
 
-`@.claude/rules/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って変更を反映する。spec ファイルを上書きし、末尾の `## 変更セット` セクションに変更内容を記録する（書式は `spec-conventions.md` の「変更セット」節に従う）。
+`@.claude/rules/tdd/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って変更を反映する。spec ファイルを上書きし、末尾の `## 変更セット` セクションに変更内容を記録する（書式は `spec-conventions.md` の「変更セット」節に従う）。
 
 ### Step 3: 次を案内する
 

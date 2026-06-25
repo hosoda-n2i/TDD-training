@@ -130,7 +130,7 @@ TDD-training/
             │   ├── adversary.md     #   独立レビュー専任（model: opus, 判定のみ）
             │   ├── spec-check.md    #   仕様↔テスト整合判定専任（model: sonnet, 判定のみ）
             │   └── impact-analyzer.md  #   影響範囲解析専任（model: sonnet, 解析のみ）
-            ├── rules/               # → <project>/.claude/rules/*
+            ├── rules/               # → <project>/.claude/rules/tdd/*
             │   ├── tdd-flow.md      #   dual-loop の規律（常時適用）
             │   ├── testing.md       #   テストの書き方・実コード例（property/mutation 含む）
             │   ├── typescript.md    #   TypeScript 規約
@@ -162,7 +162,7 @@ TDD-training/
    - ドメイン・スタック（pkg manager / Next.js router / 既存 Vitest・Playwright / **DB・認証**）を検出。
    - テスト基盤が無ければ導入（unit=Vitest は自動、E2E=Playwright・テスト DB・VDD ツールは確認の上）。
    - **統合 / E2E の実行基盤**（テスト DB の docker-compose・マイグレーション・認証ログイン→storageState・シード）を用意し、**各レベルが緑になる疎通確認**まで行う。
-   - `.claude/commands/`・`.claude/agents/`・`.claude/rules/`・`.claude/tdd/` を生成し、`CLAUDE.md` をドメイン情報入りで書き起こす。
+   - `.claude/commands/`・`.claude/agents/`・`.claude/rules/tdd/`・`.claude/tdd/` を生成し、`CLAUDE.md` をドメイン情報入りで書き起こす。
 
 3. **日々の開発は `/e2e` → `/tdd`。**
    - `/e2e <作りたい機能のラフな説明>` で外側ループの E2E spec を書く（RED）→ 必要な実装を列挙。
