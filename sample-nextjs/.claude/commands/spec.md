@@ -1,0 +1,65 @@
+---
+description: ラフな要望から EARS 形式の構造化仕様を起こす。受け入れ条件を REQ-ID 付きで言語化する思考・コミュニケーションの補助。ゲートではなく /e2e・/tdd への任意入力。
+argument-hint: <作りたい機能のラフな説明>
+allowed-tools: Read, Write, Edit, Grep, Glob
+---
+
+> **位置づけ**: spec は**任意入力**であって**ゲートではない**。acceptance の実体は E2E / integration テスト。spec が無くても `/e2e` → `/tdd` で開発できる。spec は受け入れ条件を REQ 単位で言語化し、`/e2e`・`/tdd` に渡せる構造化された参照を作るためのもの。
+
+## Context — sample-nextjs
+
+- アプリ: TDD トレーニング用 Next.js サンプル。src/lib の純ロジックと App Router ページを dual-loop TDD で実装する。
+- 実装/コンポーネント/サービスの配置: src/app（App Router ページ）, src/lib（純ロジック）, src/components（共有）
+- 仕様テンプレ: `.claude/tdd/spec-template.md`
+- 仕様の出力先: `.claude/tdd/specs/<slug>.md`
+
+## Your task
+
+`$ARGUMENTS`（作りたい機能のラフな説明）を EARS 形式の構造化仕様に起こす。
+
+### Step 1: 既存を読む
+
+- `@.claude/rules/tdd/spec-conventions.md` — EARS パターン・REQ-ID 規約・守ること
+- `.claude/tdd/spec-template.md` — 出力フォーマット
+- 関連する既存 spec（`.claude/tdd/specs/*.md`）・既存実装・CLAUDE.md の用語表
+
+### Step 2: EARS 形式で受け入れ条件を書く
+
+`@.claude/rules/tdd/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って各要件を書く（パターン選択・REQ-ID・推奨テストレベル付与・異常系必須・スコープ外明記）。
+
+### Step 3: 出力する
+
+`.claude/tdd/spec-template.md` の構成に沿って `.claude/tdd/specs/<slug>.md` に書き出す。`<slug>` は機能を表す英小文字ケバブケース。
+
+### Step 4: 次へ案内する
+
+書き出した spec パスを示し、次を案内する:
+
+- UI を伴う機能: `/e2e .claude/tdd/specs/<slug>.md`
+- UI を伴わない機能: `/tdd .claude/tdd/specs/<slug>.md`
+
+## Rules
+
+- **spec はテストの上位権威ではない。** spec と実テストがずれたら**テストを正**として spec を直す。
+- ドメイン語彙は CLAUDE.md の用語表に揃える。
+- 推測で要件を盛らない。曖昧な点は「未確定」として残し、`/e2e`・`/tdd` での具体化に委ねる。
+- UI テキストは 日本語。
+
+## delta モード（`--delta` または既存 spec への変更指示）
+
+引数が `--delta <変更内容>` の形式、または既存 spec へのラフな変更指示である場合:
+
+### Step 1: 既存 spec を読む
+
+`.claude/tdd/specs/<slug>.md` を開き、現行の REQ-ID と EARS 文を把握する。
+
+### Step 2: 更新版 EARS ＋ 変更セットを出力する
+
+`@.claude/rules/tdd/spec-conventions.md` の EARS パターン・REQ-ID 規約に従って変更を反映する。spec ファイルを上書きし、末尾の `## 変更セット` セクションに変更内容を記録する（書式は `spec-conventions.md` の「変更セット」節に従う）。
+
+### Step 3: 次を案内する
+
+```
+/impact REQ-NNN,REQ-NNN  → 影響範囲レポート（追加/変更/削除すべきテスト・回帰セット）
+/tdd <spec>               → 差分スコープで内側ループを実行
+```

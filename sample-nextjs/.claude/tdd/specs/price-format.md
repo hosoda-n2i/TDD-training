@@ -1,51 +1,44 @@
-# 金額整形表示ページ（formatPrice）
+# 金額整形表示（formatPrice / /price）
 
-## 目的 / 背景
-ユーザーが金額（円）の数値を入力すると、¥1,234,567 形式（円記号 + カンマ区切り）に整形して即座に表示する。
-金額を人間が読みやすい形式に変換する純粋ロジック + 入力UIページとして実装する。
+- **REQ プレフィックス**: `REQ`（この仕様内で一意）
+- **状態**: 確定
+- **関連**: `src/lib/formatPrice.ts`, `src/app/price/page.tsx`, `e2e/price.spec.ts`
 
-## スコープ / 非対象
-- やること:
-  - `formatPrice(yen: number): string` 関数（src/lib/formatPrice.ts）
-  - `/price` ページ（src/app/price/page.tsx）: number 入力 → 整形結果を表示
-- やらないこと（明示的に除外）:
-  - 通貨換算（JPY 以外）
-  - サーバーサイドでの保存・永続化
-  - 小数点以下の桁数指定（常に四捨五入して整数円）
+## 概要
 
-## ユースケース
-- ユーザーが `/price` ページを開き、入力フィールドに数値を入力すると、¥カンマ区切り形式で整形された金額が画面に表示される。
+ユーザーが円の数値を入力すると、`¥1,234,567` 形式（円記号 + カンマ区切り）に整形して即時表示する。整形そのものは純ロジック `formatPrice(yen: number): string`、入力 UI は `/price` ページ（Client Component）。
 
-## 受け入れ条件（Given–When–Then）
-- [ ] Given yen=1000 When formatPrice(1000) Then "¥1,000" を返す
-- [ ] Given yen=0 When formatPrice(0) Then "¥0" を返す
-- [ ] Given yen=1234567 When formatPrice(1234567) Then "¥1,234,567" を返す
-- [ ] Given yen=1.6（小数） When formatPrice(1.6) Then "¥2"（四捨五入）を返す
-- [ ] Given yen=1.4（小数） When formatPrice(1.4) Then "¥1"（四捨五入）を返す
-- [ ] Given yen=-1（負数） When formatPrice(-1) Then Error を投げる
-- [ ] Given /price ページ When 入力欄に "1000" を入力 Then 画面に "¥1,000" が表示される
+## アクター
 
-## 正常系 / 境界 / 異常系
-- 正常:
-  - 1000 → "¥1,000"
-  - 1234567 → "¥1,234,567"
-  - 0 → "¥0"
-- 境界:
-  - 1.6 → "¥2"（四捨五入）
-  - 1.4 → "¥1"（四捨五入）
-  - Number.MAX_SAFE_INTEGER (9007199254740991) → "¥9,007,199,254,740,991"（通常の number 範囲上限）
-- 異常:
-  - -1 → Error を投げる（負数は金額として無効）
-  - -0.1 → Error を投げる（四捨五入前でも負数は無効）
+| アクター | 説明 |
+|----------|------|
+| 利用者 | `/price` を開いて金額を入力する一般ユーザー（認証なし） |
 
-## E2E シナリオ候補
-1. **金額入力→整形表示**: `/price` ページで入力欄に "1000" を入力 → "¥1,000" がページ上に表示される
+## 受け入れ条件（EARS）
 
-## 影響範囲
-- 新規: `src/lib/formatPrice.ts`（純粋ロジック）
-- 新規: `src/lib/formatPrice.test.ts`（unit テスト）
-- 新規: `src/app/price/page.tsx`（App Router ページ、Client Component）
-- 新規: `e2e/price.spec.ts`（Playwright E2E）
+| ID | パターン | 要件 | 推奨レベル |
+|----|----------|------|-----------|
+| REQ-001 | Event-driven | WHEN 0 以上の有限な数値 `yen` が渡される THE SYSTEM SHALL `¥` + 3桁カンマ区切り文字列を返す（例: 1000 → `¥1,000`、1234567 → `¥1,234,567`） | unit |
+| REQ-002 | Ubiquitous | THE SYSTEM SHALL 入力 `0` に対して `¥0` を返す | unit |
+| REQ-003 | Event-driven | WHEN 小数の `yen` が渡される THE SYSTEM SHALL 四捨五入した整数円で整形する（1.6 → `¥2`、1.4 → `¥1`） | unit |
+| REQ-004 | Unwanted | IF `yen` が負数 THEN THE SYSTEM SHALL Error を投げる（負数は金額として無効） | unit |
+| REQ-005 | Event-driven | WHEN 利用者が `/price` の入力欄に数値を入力する THE SYSTEM SHALL 画面に整形済み金額を表示する。IF 入力が無効（負数等）THEN エラーメッセージを表示する | E2E |
+| REQ-006 | Unwanted | IF `yen` が非有限値（NaN / ±Infinity）THEN THE SYSTEM SHALL Error を投げる（金額として無効） | unit |
 
-## 残課題 / 未確定
-- なし（境界値はすべて既定で補完済み）
+## スコープ外（やらないこと）
+
+- 通貨換算（JPY 以外）
+- サーバーサイドでの保存・永続化（DB なし）
+- 小数点以下の桁数指定（常に四捨五入して整数円）
+- 認証・認可（公開ページ）
+
+## 未確定（決め切らない点）
+
+- なし（`/adversary` の指摘を受け、NaN / ±Infinity の扱いを REQ-006 として明文化済み）
+
+---
+
+## 次の一歩
+
+- UI を伴う条件（REQ-005）: `/e2e .claude/tdd/specs/price-format.md`
+- 純ロジック（REQ-001〜004）: `/tdd .claude/tdd/specs/price-format.md`
