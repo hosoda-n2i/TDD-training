@@ -85,6 +85,14 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 ## 手順
 
+> ### フェーズ構成（重要）
+> `/tdd-init` は重い。**2 フェーズに分け、Phase A だけで単独完結・コミット可能**にする。Phase B の失敗が Phase A を巻き戻さないこと。下の step 番号は論理グループで、厳密な実行順ではない。
+>
+> - **Phase A（必ず完了させる・軽量・ネット / Docker ほぼ不要）**: 検出（step 1〜3）＋ unit(Vitest) 基盤（step 4(a)）＋ commands / agents / rules / docs / CLAUDE.md の生成（step 5〜7）。**ここまでで `/spec`・`/e2e`・`/tdd`（unit 中心）が回る。** Phase A 完了時点で一度報告・コミットしてよい。生成（step 5〜7）は Phase B の完了を待たずに先行する。
+> - **Phase B（opt-in・重い・対話的）**: VDD ツール（step 4(a-vdd)）＋ 実 DB 統合基盤（step 4(b)）＋ E2E / storageState / 認証フィクスチャ（step 4(c)）＋ 疎通確認（step 4(d)）。Docker・ブラウザ DL・**既存プロジェクト固有の認証 / ORM への適応**を伴い、一発で通らず数往復かかる前提。
+>   - **Phase B が途中で失敗しても Phase A の生成物は有効。** 失敗 / 未着手は `test-infra.md` / `test-strategy.md` に「未完了（理由）」と明記し、後で `/tdd-init` 再実行で追加再開できるようにする（「対象外」で誤魔化さない）。
+>   - 重い導入（Docker / ブラウザ DL / 依存追加）に入る前に**まとめて 1 回だけ導入可否を確認**する。
+
 ### 0. 前提確認
 - 対象プロジェクトのルートを確認（`git rev-parse --show-toplevel`、無ければ `pwd`）
 - 生成先は **対象プロジェクトの `.claude/`** および ルート。このスキル自身のディレクトリには書き込まない。
@@ -138,11 +146,13 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 `templates/infra/*` を、検出した DB / 認証に合わせて適応させて書き出す。重い手順（Docker・ブラウザ DL・依存追加）に入る前に**まとめて 1 回だけ導入可否を確認**する。
 
-#### (a) ユニット（Vitest）— 常に整える
+> **(a) のみ Phase A。(a-vdd) 以降は Phase B。** 生成（step 5〜7）は Phase B の完了を待たずに先行してよい（むしろ Phase A として先に終わらせる）。Phase B が通らなくても Phase A の生成物は有効。
+
+#### (a) ユニット（Vitest）— 常に整える【Phase A】
 - 既存があれば再利用、無ければ導入。devDeps: `vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @vitest/coverage-v8`
 - `vitest.config.mts`（jsdom 環境・`@/` エイリアス・setup ファイル）、`vitest.setup.ts`、`package.json` に `test` / `test:watch` / `test:coverage` / `typecheck` を追加。
 
-#### (a-vdd) VDD ツール（property-based + mutation）— `/harden` 用に整える
+#### (a-vdd) VDD ツール（property-based + mutation）— `/harden` 用に整える【Phase B】
 
 緑の後の検証強化（`/harden`・`verifier` agent）で使う 2 ツールを導入する。Vitest の上に乗るので (a) の後に入れる。
 
@@ -162,17 +172,21 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
   - `mutate` のパスは検出した `{{SRC_LAYOUT}}` に合わせる。`thresholds.break` は導入初期は `null`（落とさない）にしておき、ゲート化しない。
 - `package.json` に `mutation` script（例: `"mutation": "stryker run"`）を追加し、`{{MUTATION_CMD}}` をそれにする（script が無ければ `npx stryker run`）。
 
-#### (b) 統合(integration) の実行基盤
+#### (b) 統合(integration) の実行基盤【Phase B】
 - **境界モック**: 追加基盤は不要。`rules/testing.md` のモック方針（repository / 認証 / 外部 API を差し替え）で書ける状態にする。
 - **実 DB を使う統合**（`{{DB}}` がある場合）: `templates/infra/docker-compose.test.yml` を生成し、Vitest の**統合用 globalSetup**（マイグレーション適用＋`beforeEach` クリーン）を用意。**ポート・DB 名は env 変数（`$TEST_DB_PORT` / `$TEST_DB_NAME`）で実行時に解決**するテンプレを使う。「未実装・必要時に」で**終わらせない**。`{{TEST_DB_UP_CMD}}` / `{{TEST_DB_DOWN_CMD}}`（`docker compose -f docker-compose.test.yml up/down` 由来）を `commands.md` に載せる。
 
-#### (c) E2E（Playwright）— Web アプリで、`{{DB}}` / `{{AUTH}}` も込みで“走る”状態にする
+#### (c) E2E（Playwright）— Web アプリで、`{{DB}}` / `{{AUTH}}` も込みで“走る”状態にする【Phase B】
 - Playwright 未導入なら導入（`e2e/` 構成）。`.gitignore` に生成物を追加: `/test-results/`, `/playwright-report/`, `/blob-report/`, `/playwright/.cache/`, `e2e/.auth/`
 - **認証**（`{{AUTH}}` がある場合）: `templates/infra/playwright.global-setup.ts` を適応させ、**テストユーザーでログイン → `storageState` 保存**。`playwright.config` で `storageState` と `webServer`（`process.env.TEST_DATABASE_URL` を `DATABASE_URL` として渡して dev / build 起動）を設定。
 - **DB**（`{{DB}}` がある場合）: `webServer` と globalSetup をテスト DB に向け、シードを投入。
-- 認証ガードの**モックヘルパー**（`requireAuth` / `requireRole` 等）を共有フィクスチャとして用意（unit / integration で使う）。
+- 認証ガードの**モックヘルパー**（`requireAuth` / `requireRole` 等）を共有フィクスチャとして用意（unit / integration で使う＝`templates/infra/auth-test-helpers.ts`）。
+- **E2E フィクスチャを実際に書き出す（参照だけで未生成にしない）**: `rules/testing.md` と `agents/e2e-guide.md` が参照する以下はテンプレ実体が無いので、ここで必ず生成する:
+  - `e2e/fixtures/auth.ts` … `authenticatedPage` を提供する Playwright fixture（`{{E2E_AUTH_FIXTURE_SNIPPET}}` を実コードに展開。`{{E2E_AUTH_FIXTURE}}` はこのパス）。
+  - `e2e/fixtures/db.ts` … テストデータの seed / cleanup（各テスト内で seed する規約に対応）。
+  - `{{AUTH}}` が無い（認証不要）プロジェクトでは `auth.ts` を省き、素の `@playwright/test` の `test` を使う。
 
-#### (d-env) 環境変数の契約と direnv 運用
+#### (d-env) 環境変数の契約と direnv 運用【Phase B】
 
 テスト DB / E2E は以下の env 変数で動く前提でテンプレを生成する。**`/tdd-init` はこれらを env で受けるテンプレを書き出すだけで、値そのものを生成物に焼かない**（ハードコードしない）:
 
@@ -194,7 +208,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 **direnv 親子継承運用ではない場合**: `.env.test` を生成して dotenv 経由で読ませる。env 変数の契約自体は同じ。
 
-#### (d) 疎通確認（最重要・ここを省かない）
+#### (d) 疎通確認（最重要・ここを省かない）【Phase B】
 
 セットアップの締めに、**各レベルが実際に緑になることを確認**する。確認用のスモークは確認後に削除:
 - **unit**: 簡単な 1 テスト（例: `expect(1 + 1).toBe(2)`）
@@ -208,6 +222,10 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 
 ### 5. commands / agents を生成する
 
+- **生成前に既存の同名 command / agent を確認する（黙って上書き厳禁）。** `/test`・`/fix`・`/review`・`/db` は汎用名で**既存プロジェクトや別スキルと衝突しやすい**。`.claude/commands/<name>.md`・`.claude/agents/<name>.md` の既存有無を `Glob` で調べ、衝突したら:
+  - 既存が**過去の `/tdd-init` 生成物**（本テンプレ由来と判断できる）→ 再生成（上書き）してよい。
+  - 既存が**無関係な定義** → 上書きしない。ユーザーに知らせ、サブフォルダに退避して名前空間化（`.claude/commands/tdd/<name>.md`）するか、その command の生成スキップを確認する。`tdd-flow.md`・`commands.md`・CLAUDE.md 内の当該コマンド参照も退避後の呼び名に合わせて直す。
+  - agents 名（`tdd-guide`・`e2e-guide`・`verifier`・`adversary`・`spec-check`・`impact-analyzer`）も同様に既存衝突を確認する。
 - `templates/commands/*` → `.claude/commands/*`（`spec` / `e2e` / `tdd` / `test` / `fix` / `harden` / `review` / `adversary` / `db` / `impact`）
 - `templates/agents/*` → `.claude/agents/*`（`tdd-guide`・`e2e-guide`・`verifier`・`spec-check`・`impact-analyzer`＝model: sonnet／`adversary`＝model: opus。frontmatter の `model` はテンプレのまま維持する。`tdd-guide` は SPEC-CHECK ステップで `spec-check` を入れ子呼びする）
 - `{{...}}` を 2〜4 の結果で置換（新規変数 `{{MUTATION_CMD}}` を忘れない）

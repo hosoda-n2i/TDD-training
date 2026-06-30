@@ -108,6 +108,7 @@ flowchart TD
 ```
 TDD-training/
 ├── README.md
+├── sample-nextjs/               # 現行ジェネレータの適用サンプル（ドッグフーディング出力）
 └── skills/
     └── tdd-init/
         ├── SKILL.md                 # 汎用ジェネレータ本体（/tdd-init）
@@ -158,11 +159,9 @@ TDD-training/
    cp -R /path/to/TDD-training/skills/tdd-init <project>/.claude/skills/tdd-init
    ```
 
-2. **対象プロジェクトのルートで `/tdd-init` を実行する。**
-   - ドメイン・スタック（pkg manager / Next.js router / 既存 Vitest・Playwright / **DB・認証**）を検出。
-   - テスト基盤が無ければ導入（unit=Vitest は自動、E2E=Playwright・テスト DB・VDD ツールは確認の上）。
-   - **統合 / E2E の実行基盤**（テスト DB の docker-compose・マイグレーション・認証ログイン→storageState・シード）を用意し、**各レベルが緑になる疎通確認**まで行う。
-   - `.claude/commands/`・`.claude/agents/`・`.claude/rules/tdd/`・`.claude/tdd/` を生成し、`CLAUDE.md` をドメイン情報入りで書き起こす。
+2. **対象プロジェクトのルートで `/tdd-init` を実行する。** 重いので **2 フェーズ**で進む:
+   - **Phase A（軽量・必ず完了）**: ドメイン・スタック（pkg manager / Next.js router / 既存 Vitest・Playwright / **DB・認証**）を検出 → unit(Vitest) 基盤 → `.claude/commands/`・`.claude/agents/`・`.claude/rules/tdd/`・`.claude/tdd/` の生成 → `CLAUDE.md` をドメイン情報入りで書き起こす。**ここまでで `/spec`・`/e2e`・`/tdd`（unit 中心）が回る。** 単独でコミット可能。
+   - **Phase B（opt-in・重い・対話的）**: VDD ツール（fast-check / Stryker）＋ **統合 / E2E の実行基盤**（テスト DB の docker-compose・マイグレーション・認証ログイン→storageState・E2E フィクスチャ・シード）を用意し、**各レベルが緑になる疎通確認**まで行う。**既存の認証 / ORM への適応を伴うため一発では通らず数往復かかる前提**。Phase B が途中で失敗しても Phase A の生成物は有効で、後から `/tdd-init` 再実行で追加再開できる。
 
 3. **日々の開発は `/e2e` → `/tdd`。**
    - `/e2e <作りたい機能のラフな説明>` で外側ループの E2E spec を書く（RED）→ 必要な実装を列挙。
