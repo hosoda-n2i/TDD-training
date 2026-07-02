@@ -5,17 +5,13 @@ allowed-tools: Bash({{PKG_MANAGER}}:*), Read, Edit, Grep, Glob
 
 ## Your task
 
-Lint / format / 型チェックを自動修復チェーンで回す。
+Lint / format / 型チェックの自動修復チェーンを回す。Step 1〜3 の各コマンドを Bash ツールで順に実行する（コマンドが「なし」のステップはスキップ）。
 
-### Step 1: Lint チェック
-!`{{LINT_CMD}} 2>&1`
+### Step 1: Lint チェック — `{{LINT_CMD}}`
 
-### Step 2: 自動修正
-!`{{LINT_FIX_CMD}} 2>&1`
-!`{{FORMAT_CMD}} 2>&1`
+### Step 2: 自動修正 — `{{LINT_FIX_CMD}}` → `{{FORMAT_CMD}}`
 
-### Step 3: 型チェック
-!`{{TYPECHECK_CMD}} 2>&1`
+### Step 3: 型チェック — `{{TYPECHECK_CMD}}`
 
 ### Step 4: 自動修正で消えなかったエラーを潰す
 

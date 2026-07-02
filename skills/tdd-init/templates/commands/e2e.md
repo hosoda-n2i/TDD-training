@@ -18,9 +18,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 ### モードA: 引数が E2E ファイルパスっぽい（`e2e/.*\.spec\.ts`）
 
-指定された E2E を実行して結果を解析する。
-
-!`{{TEST_E2E_FILE_CMD}} $ARGUMENTS`
+指定された E2E を実行して結果を解析する: `{{TEST_E2E_FILE_CMD}} $ARGUMENTS` を Bash ツールで実行する。
 
 報告:
 - pass / fail / skip 件数
@@ -43,11 +41,7 @@ allowed-tools: Read, Write, Edit, Bash({{PKG_MANAGER}}:*), Bash(npx:*), Grep, Gl
 
 ### 引数なし
 
-全 E2E を実行:
-
-!`{{TEST_E2E_ALL_CMD}}`
-
-サマリと失敗の解析を報告する。
+全 E2E を実行する: `{{TEST_E2E_ALL_CMD}}` を Bash ツールで実行し、サマリと失敗の解析を報告する。
 
 ## Rules
 

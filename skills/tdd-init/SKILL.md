@@ -229,6 +229,7 @@ description: TypeScript / Node.js（主に Next.js）プロジェクトを **dua
 - `templates/commands/*` → `.claude/commands/*`（`spec` / `e2e` / `tdd` / `test` / `fix` / `harden` / `review` / `adversary` / `db` / `impact`）
 - `templates/agents/*` → `.claude/agents/*`（`tdd-guide`・`e2e-guide`・`verifier`・`spec-check`・`impact-analyzer`＝model: sonnet／`adversary`＝model: opus。frontmatter の `model` はテンプレのまま維持する。`tdd-guide` は SPEC-CHECK ステップで `spec-check` を入れ子呼びする）
 - `{{...}}` を 2〜4 の結果で置換（新規変数 `{{MUTATION_CMD}}` を忘れない）
+- **command テンプレ内の実行手順に埋まるコマンド変数が「なし」の場合、その手順・表の行ごと削除する**（例: `{{FORMAT_CMD}}` が無いなら `fix.md` の該当ステップを落とす）。「なし」を実行指示として残さない。
 - 「対象外」のものはスキップ:
   - E2E 対象でない（純ライブラリ等）→ `e2e.md` / `e2e-guide.md` をスキップ
   - DB が無い → `db.md` をスキップ
@@ -321,6 +322,7 @@ dual-loop TDD（外側 E2E / 内側 unit-integration）で開発する:
 - **コマンドは実在分だけ**。無いものは「なし」。捏造しない。
 - **このスキルはセットアップ専用**。日々の開発は `/e2e` と `/tdd` が回す。再セットアップ時だけ `tdd-init` を再実行。
 - **生成先は対象プロジェクトの `.claude/` と ルート**。このスキルのディレクトリは読み取り専用。
+- **command テンプレの `` !`...` `` インライン実行は、軽量なコンテキスト収集（`git status` / `git diff --stat` 等）に限る**。`!` 行はコマンド起動時に**全行が無条件で事前実行**されるため、テスト実行・DB 操作・重い処理を `!` に書かない（本文の手順として書き、Claude に Bash ツールで実行させる）。
 - **インフラ・配布の仕組み（install.sh / グローバル登録 / CI 設定）を勝手に作らない**。スキルはセットアップだけに留める。
 
 ### 取り込まない物（dual-loop の軽さを壊さない / 再実行で full VSDD に流れない）

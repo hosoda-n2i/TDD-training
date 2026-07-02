@@ -6,15 +6,10 @@ allowed-tools: Bash({{PKG_MANAGER}}:*), Read
 
 ## Your task
 
-テストを実行して結果を解析する。
+テストを Bash ツールで実行して結果を解析する。実行するのは**次のどちらか 1 つだけ**:
 
-**引数が指定されている場合:**
-
-!`{{TEST_UNIT_FILE_CMD}} $ARGUMENTS 2>&1`
-
-**引数が無い場合:**
-
-!`{{TEST_UNIT_ALL_CMD}} 2>&1`
+- **引数が指定されている場合**: `{{TEST_UNIT_FILE_CMD}} $ARGUMENTS`
+- **引数が無い場合**: `{{TEST_UNIT_ALL_CMD}}`
 
 ## 解析
 
