@@ -73,7 +73,7 @@ export DATABASE_URL="$TEST_DATABASE_URL"
 
 ## 認証
 
-- unit / integration: `auth-test-helpers.ts` の `mockAuth()` でガード（`requireAuth` / `requireRole`）をモック。権限違いの異常系も `mockAuth({ role })` で検証。
+- unit / integration: `auth-test-helpers.ts` の `mockAuth()` でガード（`requireAuth` / `requireRole`）をモック。権限違いの異常系も `mockAuth({ role })` で検証（テストファイル top-level で `vi.mock` + `authMockFactory` を登録しておくのが前提。書き方はヘルパー冒頭の使い方コメント参照）。
 - E2E: `e2e/global-setup.ts` がテストユーザーでログイン → `e2e/.auth/state.json` に `storageState` を保存。`playwright.config` の `use.storageState` で全 E2E が認証済みで開始。
 - テストユーザーはテスト DB にシード（`{{SEED_CMD}}`）。認証情報は env 契約の `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD`。
 
